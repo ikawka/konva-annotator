@@ -1,29 +1,11 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import React from "react";
+import React, { useRef } from "react";
+import ReactDOM from "react-dom/client";
 import { Rect, Transformer, Label } from "react-konva";
 import { Html } from "react-konva-utils";
-import styled from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faPencil } from "@fortawesome/free-solid-svg-icons";
 
-const ToolTip = styled.div`
-  background: #333;
-  color: white;
-  padding: 8px 8px;
-  font-size: 18px;
-  border-radius: 4px;
-  min-width: 250px;
-`;
-
-const Arrow = styled.div`
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: inherit;
-  transform: rotate(45deg);
-  top: -4px;
-`;
+import ToolTip from "./ToolTip";
 
 interface Props {
   shapeProps: {
@@ -59,6 +41,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
       });
     }
   }, [isSelected, shapeRef]);
+
   return (
     <React.Fragment>
       <Rect
@@ -150,24 +133,10 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
             }}
           />
 
-          {!isResizing && (
+          {!isResizing && labelPos.x !== 0 && (
             <Label {...labelPos}>
               <Html>
-                <ToolTip role="tooltip">
-                  <div>My tooltip</div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      gap: 16,
-                      padding: 4,
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faPencil} />
-                    <FontAwesomeIcon icon={faTrash} />
-                  </div>
-                  <Arrow data-popper-arrow />
-                </ToolTip>
+                <ToolTip />
               </Html>
             </Label>
           )}
