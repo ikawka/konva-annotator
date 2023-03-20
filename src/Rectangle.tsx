@@ -85,7 +85,12 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           setIsResizing(true);
           const node = shapeRef.current || undefined;
           if (node) {
-            node.strokeWidth(node.strokeWidth());
+            node.setAttrs({
+              width: Math.max(node.width() * node.scaleX(), 2),
+              height: Math.max(node.height() * node.scaleY(), 2),
+              scaleX: 1,
+              scaleY: 1,
+            });
           }
         }}
         onTransformEnd={(e) => {
@@ -106,8 +111,8 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
               x: node.x(),
               y: node.y(),
               // set minimal value
-              width: Math.max(5, node.width() * scaleX),
-              height: Math.max(5, node.height() * scaleY),
+              width: Math.max(2, node.width() * scaleX),
+              height: Math.max(2, node.height() * scaleY),
             };
             onChange(data);
             updateLabelPos({

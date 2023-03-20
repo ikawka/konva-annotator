@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { Layer, Stage } from "react-konva";
+import { Layer, Stage, Image, Group } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
+// import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+
 import "./App.css";
 import Rectangle from "./Rectangle";
 import bg from "./imgs/apartment-buildings.webp";
 import Toolbar, { Tool } from "./Toolbar";
 import { isDrawable } from "./utils";
 import Pin from "./Pin";
+import { useImage } from "react-konva-utils";
+import Konva from "konva";
 
 interface StageDimension {
   width: number;
@@ -23,7 +27,10 @@ interface RectProp {
 }
 
 const Main = () => {
+  const [image] = useImage(bg);
   const containerRef = useRef<HTMLDivElement>(null);
+  const groupRef = useRef<Konva.Group>(null);
+
   const [dimension, updateDimension] = useState<StageDimension>({
     width: 0,
     height: 0,
@@ -38,17 +45,25 @@ const Main = () => {
   };
 
   const handleMouseDown = (event: KonvaEventObject<MouseEvent>) => {
-    if (event.target !== event.target.getStage()) return;
+    if (event.target !== event.target.getStage() && !isDrawable(currentTool))
+      return;
+
+    selectShape(-1);
     const stage = event.target?.getStage();
-    if (newAnnotation.length === 0 && stage && isDrawable(currentTool)) {
+    if (
+      newAnnotation.length === 0 &&
+      stage &&
+      isDrawable(currentTool) &&
+      groupRef.current
+    ) {
       const pinWidth = 25;
       const pinHeight = 35;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
-      let startX = x;
-      let startY = y;
+      let startX = x / stage.scaleX() - groupRef.current.x();
+      let startY = y / stage.scaleY() - groupRef.current.y();
       if (currentTool === "pin") {
-        startX = x - pinWidth / 2;
-        startY = y - pinHeight;
+        startX = startX - pinWidth / 2;
+        startY = startY - pinHeight;
       }
       setNewAnnotation([
         {
@@ -65,12 +80,19 @@ const Main = () => {
 
   const handleMouseUp = (event: KonvaEventObject<MouseEvent>) => {
     const stage = event.target?.getStage();
-    if (newAnnotation.length === 1 && stage && isDrawable(currentTool)) {
+    if (
+      newAnnotation.length === 1 &&
+      stage &&
+      isDrawable(currentTool) &&
+      groupRef.current
+    ) {
       const sx = newAnnotation[0].x;
       const sy = newAnnotation[0].y;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
-      const width = x - sx;
-      const height = y - sy;
+      const endX = x / stage.scaleX() - groupRef.current.x();
+      const endY = y / stage.scaleY() - groupRef.current.y();
+      const width = endX - sx;
+      const height = endY - sy;
 
       // normalize negative values before adding
       const annotationToAdd = {
@@ -89,17 +111,30 @@ const Main = () => {
 
   const handleMouseMove = (event: KonvaEventObject<MouseEvent>) => {
     const stage = event.target?.getStage();
-    if (newAnnotation.length === 1 && stage && isDrawable(currentTool)) {
+    if (
+      newAnnotation.length === 1 &&
+      stage &&
+      isDrawable(currentTool) &&
+      groupRef.current
+    ) {
       const sx = newAnnotation[0].x;
       const sy = newAnnotation[0].y;
+      const pinWidth = 25;
+      const pinHeight = 35;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
+      let startX = x / stage.scaleX() - groupRef.current.x();
+      let startY = y / stage.scaleY() - groupRef.current.y();
+      if (currentTool === "pin") {
+        startX = startX - pinWidth / 2;
+        startY = startY - pinHeight;
+      }
       setNewAnnotation([
         {
           tool: currentTool,
           x: sx,
           y: sy,
-          width: x - sx,
-          height: y - sy,
+          width: startX - sx,
+          height: startY - sy,
           key: "0",
         },
       ]);
@@ -115,6 +150,12 @@ const Main = () => {
     }
   }, [containerRef]);
 
+  useEffect(() => {
+    if (isDrawable(currentTool)) {
+      selectShape(-1);
+    }
+  }, [currentTool]);
+
   // this is necessary for real-time drawing
   const annotationsToDraw = [...annotations, ...newAnnotation];
   return (
@@ -126,51 +167,88 @@ const Main = () => {
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
           {...dimension}
-          style={{
-            backgroundImage: `url(${bg})`,
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
+          onWheel={(e) => {
+            // stop default scrolling
+            e.evt.preventDefault();
+            var scaleBy = 1.05;
+            const stage = e.target?.getStage();
+            // var pointer = stage?.getPointerPosition();
+            if (!stage || !groupRef.current) return;
+            var oldScale = stage.scaleX();
+
+            // var mousePointTo = {
+            //   x: (pointer.x - stage.x()) / oldScale,
+            //   y: (pointer.y - stage.y()) / oldScale,
+            // };
+
+            // how to scale? Zoom in? Or zoom out?
+            let direction = e.evt.deltaY > 0 ? 1 : -1;
+
+            // when we zoom on trackpad, e.evt.ctrlKey is true
+            // in that case lets revert direction
+            if (e.evt.ctrlKey) {
+              direction = -direction;
+            }
+
+            var newScale =
+              direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+            const scaleVal = { x: newScale, y: newScale };
+            stage.scale(scaleVal);
+            // var newPos = {
+            //   x: pointer.x - mousePointTo.x * newScale,
+            //   y: pointer.y - mousePointTo.y * newScale,
+            // };
+            // stage.position(newPos);
           }}
         >
           <Layer>
-            {annotationsToDraw.map((shape, index) => {
-              switch (shape.tool) {
-                case "pin":
-                  return (
-                    <Pin
-                      key={index}
-                      shapeProps={shape}
-                      isSelected={index === selectedId}
-                      onSelect={() => {
-                        selectShape(index);
-                      }}
-                      onChange={(newAttrs) => {
-                        const r = annotationsToDraw.slice();
-                        r[index] = newAttrs;
-                        setAnnotations(r);
-                      }}
-                    />
-                  );
-                case "rect":
-                  return (
-                    <Rectangle
-                      key={index}
-                      isSelected={index === selectedId}
-                      onSelect={() => {
-                        selectShape(index);
-                      }}
-                      shapeProps={shape}
-                      onChange={(newAttrs) => {
-                        const r = annotationsToDraw.slice();
-                        r[index] = newAttrs;
-                        setAnnotations(r);
-                      }}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            })}
+            <Group draggable={!isDrawable(currentTool)} ref={groupRef}>
+              <Image
+                image={image}
+                x={0}
+                y={0}
+                onClick={() => selectShape(-1)}
+              />
+              {annotationsToDraw.map((shape, index) => {
+                switch (shape.tool) {
+                  case "pin":
+                    return (
+                      <Pin
+                        key={index}
+                        shapeProps={{ ...shape }}
+                        isSelected={index === selectedId}
+                        onSelect={() => {
+                          if (!isDrawable(currentTool)) selectShape(index);
+                        }}
+                        onChange={(newAttrs) => {
+                          const r = annotationsToDraw.slice();
+                          r[index] = newAttrs;
+                          setAnnotations(r);
+                        }}
+                      />
+                    );
+                  case "rect":
+                    return (
+                      <Rectangle
+                        key={index}
+                        isSelected={index === selectedId}
+                        onSelect={() => {
+                          if (!isDrawable(currentTool)) selectShape(index);
+                        }}
+                        shapeProps={shape}
+                        onChange={(newAttrs) => {
+                          const r = annotationsToDraw.slice();
+                          r[index] = newAttrs;
+                          setAnnotations(r);
+                        }}
+                      />
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </Group>
           </Layer>
         </Stage>
       </div>
