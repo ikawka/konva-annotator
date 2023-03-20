@@ -11,6 +11,19 @@ import { isDrawable } from "./utils";
 import Pin from "./Pin";
 import { useImage } from "react-konva-utils";
 import Konva from "konva";
+import styled from "styled-components";
+import Arrow from "./Arrow";
+
+const Shadow = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  box-shadow: 0px 0px 6px 1px rgba(0, 0, 0, 0.15) inset;
+  z-index: 99999;
+  pointer-events: none;
+`;
 
 interface StageDimension {
   width: number;
@@ -95,14 +108,26 @@ const Main = () => {
       const height = endY - sy;
 
       // normalize negative values before adding
-      const annotationToAdd = {
-        x: width < 0 ? sx + width : sx,
-        y: height < 0 ? sy + height : sy,
-        width: Math.abs(width),
-        height: Math.abs(height),
-        key: `${annotations.length + 1}`,
-        tool: currentTool,
-      };
+      let annotationToAdd;
+      if (currentTool === "arrow") {
+        annotationToAdd = {
+          x: sx,
+          y: sy,
+          width: endX - sx,
+          height: endY - sy,
+          key: `${annotations.length + 1}`,
+          tool: currentTool,
+        };
+      } else {
+        annotationToAdd = {
+          x: width < 0 ? sx + width : sx,
+          y: height < 0 ? sy + height : sy,
+          width: Math.abs(width),
+          height: Math.abs(height),
+          key: `${annotations.length + 1}`,
+          tool: currentTool,
+        };
+      }
       annotations.push(annotationToAdd);
       setNewAnnotation([]);
       setAnnotations(annotations);
@@ -162,6 +187,7 @@ const Main = () => {
     <>
       <Toolbar onSelect={onToolbarSelect} />
       <div className="App" ref={containerRef}>
+        <Shadow />
         <Stage
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
@@ -212,6 +238,22 @@ const Main = () => {
               />
               {annotationsToDraw.map((shape, index) => {
                 switch (shape.tool) {
+                  case "arrow":
+                    return (
+                      <Arrow
+                        key={index}
+                        shapeProps={shape}
+                        isSelected={index === selectedId}
+                        onSelect={() => {
+                          if (!isDrawable(currentTool)) selectShape(index);
+                        }}
+                        onChange={(newAttrs) => {
+                          const r = annotationsToDraw.slice();
+                          r[index] = newAttrs;
+                          setAnnotations(r);
+                        }}
+                      />
+                    );
                   case "pin":
                     return (
                       <Pin
