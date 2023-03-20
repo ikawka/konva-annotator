@@ -5,6 +5,8 @@ import "./App.css";
 import Rectangle from "./Rectangle";
 import bg from "./imgs/apartment-buildings.webp";
 import Toolbar, { Tool } from "./Toolbar";
+import { isDrawable } from "./utils";
+import Pin from "./Pin";
 
 interface StageDimension {
   width: number;
@@ -29,23 +31,41 @@ const Main = () => {
   const [annotations, setAnnotations] = useState<RectProp[]>([]);
   const [newAnnotation, setNewAnnotation] = useState<RectProp[]>([]);
   const [selectedId, selectShape] = useState<number>(-1);
+  const [currentTool, setCurrentTool] = useState<Tool>("pointer");
 
   const onToolbarSelect = (tool: Tool) => {
-    console.log(tool);
+    setCurrentTool(tool);
   };
 
   const handleMouseDown = (event: KonvaEventObject<MouseEvent>) => {
     if (event.target !== event.target.getStage()) return;
     const stage = event.target?.getStage();
-    if (newAnnotation.length === 0 && stage) {
+    if (newAnnotation.length === 0 && stage && isDrawable(currentTool)) {
+      const pinWidth = 25;
+      const pinHeight = 35;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
-      setNewAnnotation([{ tool: "rect", x, y, width: 0, height: 0, key: "0" }]);
+      let startX = x;
+      let startY = y;
+      if (currentTool === "pin") {
+        startX = x - pinWidth / 2;
+        startY = y - pinHeight;
+      }
+      setNewAnnotation([
+        {
+          tool: currentTool,
+          x: startX,
+          y: startY,
+          width: 0,
+          height: 0,
+          key: "0",
+        },
+      ]);
     }
   };
 
   const handleMouseUp = (event: KonvaEventObject<MouseEvent>) => {
     const stage = event.target?.getStage();
-    if (newAnnotation.length === 1 && stage) {
+    if (newAnnotation.length === 1 && stage && isDrawable(currentTool)) {
       const sx = newAnnotation[0].x;
       const sy = newAnnotation[0].y;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
@@ -59,7 +79,7 @@ const Main = () => {
         width: Math.abs(width),
         height: Math.abs(height),
         key: `${annotations.length + 1}`,
-        tool: "rect",
+        tool: currentTool,
       };
       annotations.push(annotationToAdd);
       setNewAnnotation([]);
@@ -69,12 +89,19 @@ const Main = () => {
 
   const handleMouseMove = (event: KonvaEventObject<MouseEvent>) => {
     const stage = event.target?.getStage();
-    if (newAnnotation.length === 1 && stage) {
+    if (newAnnotation.length === 1 && stage && isDrawable(currentTool)) {
       const sx = newAnnotation[0].x;
       const sy = newAnnotation[0].y;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       setNewAnnotation([
-        { tool: "rect", x: sx, y: sy, width: x - sx, height: y - sy, key: "0" },
+        {
+          tool: currentTool,
+          x: sx,
+          y: sy,
+          width: x - sx,
+          height: y - sy,
+          key: "0",
+        },
       ]);
     }
   };
@@ -107,21 +134,42 @@ const Main = () => {
         >
           <Layer>
             {annotationsToDraw.map((shape, index) => {
-              return (
-                <Rectangle
-                  key={index}
-                  isSelected={index === selectedId}
-                  onSelect={() => {
-                    selectShape(index);
-                  }}
-                  shapeProps={shape}
-                  onChange={(newAttrs) => {
-                    const r = annotationsToDraw.slice();
-                    r[index] = newAttrs;
-                    setAnnotations(r);
-                  }}
-                />
-              );
+              switch (shape.tool) {
+                case "pin":
+                  return (
+                    <Pin
+                      key={index}
+                      shapeProps={shape}
+                      isSelected={index === selectedId}
+                      onSelect={() => {
+                        selectShape(index);
+                      }}
+                      onChange={(newAttrs) => {
+                        const r = annotationsToDraw.slice();
+                        r[index] = newAttrs;
+                        setAnnotations(r);
+                      }}
+                    />
+                  );
+                case "rect":
+                  return (
+                    <Rectangle
+                      key={index}
+                      isSelected={index === selectedId}
+                      onSelect={() => {
+                        selectShape(index);
+                      }}
+                      shapeProps={shape}
+                      onChange={(newAttrs) => {
+                        const r = annotationsToDraw.slice();
+                        r[index] = newAttrs;
+                        setAnnotations(r);
+                      }}
+                    />
+                  );
+                default:
+                  return null;
+              }
             })}
           </Layer>
         </Stage>

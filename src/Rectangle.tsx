@@ -1,7 +1,6 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import React, { useRef } from "react";
-import ReactDOM from "react-dom/client";
+import React from "react";
 import { Rect, Transformer, Label } from "react-konva";
 import { Html } from "react-konva-utils";
 

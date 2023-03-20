@@ -7,7 +7,6 @@ import {
   IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { TippyProps } from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
@@ -47,7 +46,7 @@ const Toolbar = ({ onSelect }: ToolbarProps) => {
 
   useEffect(() => {
     if (selected) onSelect(selected);
-  }, [selected]);
+  }, [selected, onSelect]);
 
   useEffect(() => {
     setSelected("pointer");
