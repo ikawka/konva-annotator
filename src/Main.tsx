@@ -13,6 +13,7 @@ import { useImage } from "react-konva-utils";
 import Konva from "konva";
 import styled from "styled-components";
 import Arrow from "./Arrow";
+import { ShapeProp } from "./types";
 
 const Shadow = styled.div`
   position: absolute;
@@ -30,15 +31,6 @@ interface StageDimension {
   height: number;
 }
 
-interface RectProp {
-  tool: Omit<Tool, "pointer">;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  key: string;
-}
-
 const Main = () => {
   const [image] = useImage(bg);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,8 +40,8 @@ const Main = () => {
     width: 0,
     height: 0,
   });
-  const [annotations, setAnnotations] = useState<RectProp[]>([]);
-  const [newAnnotation, setNewAnnotation] = useState<RectProp[]>([]);
+  const [annotations, setAnnotations] = useState<ShapeProp[]>([]);
+  const [newAnnotation, setNewAnnotation] = useState<ShapeProp[]>([]);
   const [selectedId, selectShape] = useState<number>(-1);
   const [currentTool, setCurrentTool] = useState<Tool>("pointer");
 
@@ -74,27 +66,23 @@ const Main = () => {
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       let startX = x / stage.scaleX() - groupRef.current.x();
       let startY = y / stage.scaleY() - groupRef.current.y();
-      let startW = 0;
-      let startH = 0;
+      let data: ShapeProp = {
+        tool: currentTool,
+        x: startX,
+        y: startY,
+        width: 0,
+        height: 0,
+        key: "0",
+      };
       if (currentTool === "pin") {
-        startX = startX - pinWidth / 2;
-        startY = startY - pinHeight;
+        data.x = startX - pinWidth / 2;
+        data.y = startY - pinHeight;
       }
 
       if (currentTool === "arrow") {
-        startW = startX;
-        startH = startY;
+        data.points = [startX, startY, startX, startY];
       }
-      setNewAnnotation([
-        {
-          tool: currentTool,
-          x: startX,
-          y: startY,
-          width: startW,
-          height: startH,
-          key: "0",
-        },
-      ]);
+      setNewAnnotation([data]);
     }
   };
 
@@ -115,22 +103,20 @@ const Main = () => {
       const height = endY - sy;
 
       // normalize negative values before adding
-      let annotationToAdd;
+      let annotationToAdd: ShapeProp = {
+        x: width < 0 ? sx + width : sx,
+        y: height < 0 ? sy + height : sy,
+        width: Math.abs(width),
+        height: Math.abs(height),
+        key: `${annotations.length + 1}`,
+        tool: currentTool,
+      };
+
       if (currentTool === "arrow") {
         annotationToAdd = {
+          points: [sx, sy, endX, endY],
           x: sx,
           y: sy,
-          width: endX,
-          height: endY,
-          key: `${annotations.length + 1}`,
-          tool: currentTool,
-        };
-      } else {
-        annotationToAdd = {
-          x: width < 0 ? sx + width : sx,
-          y: height < 0 ? sy + height : sy,
-          width: Math.abs(width),
-          height: Math.abs(height),
           key: `${annotations.length + 1}`,
           tool: currentTool,
         };
@@ -149,34 +135,30 @@ const Main = () => {
       isDrawable(currentTool) &&
       groupRef.current
     ) {
-      const sx = newAnnotation[0].x;
-      const sy = newAnnotation[0].y;
+      const startX = newAnnotation[0].x;
+      const startY = newAnnotation[0].y;
       const pinWidth = 25;
       const pinHeight = 35;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
-      let startX = x / stage.scaleX() - groupRef.current.x();
-      let startY = y / stage.scaleY() - groupRef.current.y();
-
+      let endX = x / stage.scaleX() - groupRef.current.x();
+      let endY = y / stage.scaleY() - groupRef.current.y();
+      let data: ShapeProp = {
+        tool: currentTool,
+        x: startX,
+        y: startY,
+        width: endX - startX,
+        height: endY - startY,
+        key: "0",
+      };
       if (currentTool === "pin") {
-        startX = startX - pinWidth / 2;
-        startY = startY - pinHeight;
+        data.x = endX - pinWidth / 2;
+        data.y = endY - pinHeight;
       }
-      let currW = startX - sx;
-      let currH = startY - sy;
+
       if (currentTool === "arrow") {
-        currW = startX;
-        currH = startY;
+        data.points = [startX, startY, endX, endY];
       }
-      setNewAnnotation([
-        {
-          tool: currentTool,
-          x: sx,
-          y: sy,
-          width: currW,
-          height: currH,
-          key: "0",
-        },
-      ]);
+      setNewAnnotation([data]);
     }
   };
 
@@ -292,7 +274,11 @@ const Main = () => {
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
                         }}
-                        shapeProps={shape}
+                        shapeProps={{
+                          ...shape,
+                          width: shape.width ?? 0,
+                          height: shape.height ?? 0,
+                        }}
                         onChange={(newAttrs) => {
                           const r = annotationsToDraw.slice();
                           r[index] = newAttrs;

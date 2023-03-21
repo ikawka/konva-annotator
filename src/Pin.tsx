@@ -14,8 +14,6 @@ interface Props {
   shapeProps: {
     x: number;
     y: number;
-    width: number;
-    height: number;
   };
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Arrow as KonvaArrow, Circle } from "react-konva";
+import { ShapeProp } from "./types";
 
 interface AnchorProps {
   x: number;
@@ -10,29 +11,27 @@ interface AnchorProps {
   onDragMove: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Anchor = ({ x, y, visible, onDragMove }: AnchorProps) => {
-  return (
-    <Circle
-      x={x}
-      y={y}
-      radius={6}
-      stroke="#83c5ff"
-      fill="#fff"
-      strokeWidth={2}
-      draggable={true}
-      visible={visible}
-      onDragMove={onDragMove}
-    />
-  );
-};
+const Anchor = React.forwardRef<Konva.Circle, AnchorProps>(
+  ({ x, y, visible, onDragMove }, ref) => {
+    return (
+      <Circle
+        ref={ref}
+        x={x}
+        y={y}
+        radius={6}
+        stroke="#83c5ff"
+        fill="#fff"
+        strokeWidth={2}
+        draggable={true}
+        visible={visible}
+        onDragMove={onDragMove}
+      />
+    );
+  }
+);
 
 interface Props {
-  shapeProps: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  shapeProps: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
@@ -50,20 +49,36 @@ interface Points {
 const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
   const trRef = React.useRef<Konva.Transformer>(null);
   const shapeRef = React.useRef<Konva.Arrow>(null);
+  const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [points, updatePoints] = useState<Points>({
-    x1: shapeProps.x,
-    y1: shapeProps.y,
-    x2: shapeProps.width,
-    y2: shapeProps.height,
+    x1: shapeProps.points?.[0] || 0,
+    y1: shapeProps.points?.[1] || 0,
+    x2: shapeProps.points?.[2] || 0,
+    y2: shapeProps.points?.[3] || 0,
   });
 
   const onAnchor1Change = (e: KonvaEventObject<MouseEvent>) => {
+    const { x, y } = e.target.getAttrs();
+    const [, , x2, y2] = shapeProps.points ?? [];
+
+    onChange({
+      ...shapeProps,
+      points: [x, y, x2, y2],
+      x,
+      y,
+    });
     updatePoints((prev) => {
       return { ...prev, x1: e.target.x(), y1: e.target.y() };
     });
   };
 
   const onAnchor2Change = (e: KonvaEventObject<MouseEvent>) => {
+    const { x, y } = e.target.getAttrs();
+    const [x1, y1] = shapeProps.points ?? [];
+    onChange({
+      ...shapeProps,
+      points: [x1, y1, x, y],
+    });
     updatePoints((prev) => {
       return { ...prev, x2: e.target.x(), y2: e.target.y() };
     });
@@ -78,12 +93,10 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
   }, [isSelected, shapeRef]);
 
   React.useEffect(() => {
-    updatePoints({
-      x1: shapeProps.x,
-      y1: shapeProps.y,
-      x2: shapeProps.width,
-      y2: shapeProps.height,
-    });
+    const [x1, y1, x2, y2] = shapeProps.points ?? [];
+    updatePoints({ x1, y1, x2, y2 });
+    shapeRef.current?.setAttrs({ x: 0, y: 0 });
+    setIsDragging(false);
   }, [shapeProps]);
 
   return (
@@ -96,18 +109,20 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
         strokeWidth={4}
         pointerLength={8}
         pointerWidth={8}
-        draggable={isSelected}
         onClick={(e) => onSelect(e)}
+        draggable={isSelected}
+        onDragStart={() => {
+          setIsDragging(true);
+        }}
         onDragEnd={(e) => {
-          if (shapeRef.current) {
-            const [x1, y1, x2, y2] = shapeRef.current.points();
-            onChange({
-              x: x1,
-              y: y1,
-              width: x2,
-              height: y2,
-            });
-          }
+          const { x, y } = e.target.getAttrs();
+          const [x1, y1, x2, y2] = shapeProps.points ?? [];
+          onChange({
+            ...shapeProps,
+            points: [x1 + x, y1 + y, x2 + x, y2 + y],
+            x: shapeProps.x + x,
+            y: shapeProps.y + y,
+          });
         }}
       />
       {isSelected && (
@@ -115,13 +130,13 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
           <Anchor
             x={points.x1}
             y={points.y1}
-            visible={true}
+            visible={!isDragging}
             onDragMove={onAnchor1Change}
           />
           <Anchor
             x={points.x2}
             y={points.y2}
-            visible={true}
+            visible={!isDragging}
             onDragMove={onAnchor2Change}
           />
         </>
