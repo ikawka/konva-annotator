@@ -55,6 +55,15 @@ const Pin = ({ shapeProps, onSelect, isSelected, onChange }: Props) => {
         width={width}
         draggable={isSelected}
         onClick={(e) => onSelect(e)}
+        onMouseOver={(e) => {
+          e.target.opacity(0.6);
+        }}
+        onMouseOut={(e) => {
+          e.target.opacity(1);
+        }}
+        strokeWidth={1}
+        stroke="white"
+        strokeEnabled={isSelected}
         onDragMove={() => {
           if (shapeRef.current) {
             updateLabelPos({

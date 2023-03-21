@@ -74,17 +74,24 @@ const Main = () => {
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       let startX = x / stage.scaleX() - groupRef.current.x();
       let startY = y / stage.scaleY() - groupRef.current.y();
+      let startW = 0;
+      let startH = 0;
       if (currentTool === "pin") {
         startX = startX - pinWidth / 2;
         startY = startY - pinHeight;
+      }
+
+      if (currentTool === "arrow") {
+        startW = startX;
+        startH = startY;
       }
       setNewAnnotation([
         {
           tool: currentTool,
           x: startX,
           y: startY,
-          width: 0,
-          height: 0,
+          width: startW,
+          height: startH,
           key: "0",
         },
       ]);
@@ -113,8 +120,8 @@ const Main = () => {
         annotationToAdd = {
           x: sx,
           y: sy,
-          width: endX - sx,
-          height: endY - sy,
+          width: endX,
+          height: endY,
           key: `${annotations.length + 1}`,
           tool: currentTool,
         };
@@ -149,17 +156,24 @@ const Main = () => {
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       let startX = x / stage.scaleX() - groupRef.current.x();
       let startY = y / stage.scaleY() - groupRef.current.y();
+
       if (currentTool === "pin") {
         startX = startX - pinWidth / 2;
         startY = startY - pinHeight;
+      }
+      let currW = startX - sx;
+      let currH = startY - sy;
+      if (currentTool === "arrow") {
+        currW = startX;
+        currH = startY;
       }
       setNewAnnotation([
         {
           tool: currentTool,
           x: sx,
           y: sy,
-          width: startX - sx,
-          height: startY - sy,
+          width: currW,
+          height: currH,
           key: "0",
         },
       ]);
