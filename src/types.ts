@@ -8,4 +8,5 @@ export interface ShapeProp {
   width?: number;
   height?: number;
   key: string;
+  isClosed?: boolean;
 }

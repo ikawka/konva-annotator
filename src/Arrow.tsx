@@ -1,34 +1,9 @@
 import React, { useState } from "react";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { Arrow as KonvaArrow, Circle } from "react-konva";
+import { Arrow as KonvaArrow } from "react-konva";
 import { ShapeProp } from "./types";
-
-interface AnchorProps {
-  x: number;
-  y: number;
-  visible: boolean;
-  onDragMove: (e: KonvaEventObject<MouseEvent>) => void;
-}
-
-const Anchor = React.forwardRef<Konva.Circle, AnchorProps>(
-  ({ x, y, visible, onDragMove }, ref) => {
-    return (
-      <Circle
-        ref={ref}
-        x={x}
-        y={y}
-        radius={6}
-        stroke="#83c5ff"
-        fill="#fff"
-        strokeWidth={2}
-        draggable={true}
-        visible={visible}
-        onDragMove={onDragMove}
-      />
-    );
-  }
-);
+import { Anchor } from "./Anchor";
 
 interface Props {
   shapeProps: ShapeProp;

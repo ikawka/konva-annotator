@@ -14,6 +14,7 @@ import Konva from "konva";
 import styled from "styled-components";
 import Arrow from "./Arrow";
 import { ShapeProp } from "./types";
+import Polygon from "./Polygon";
 
 const Shadow = styled.div`
   position: absolute;
@@ -45,6 +46,10 @@ const Main = () => {
   const [selectedId, selectShape] = useState<number>(-1);
   const [currentTool, setCurrentTool] = useState<Tool>("pointer");
 
+  const [isDrawPoly, setIsDrawPoly] = useState<boolean>(false);
+  const [polyPoints, updatePolyPoints] = useState<number>(1);
+  const [polyIsOverStart, setPolyIsOverStart] = useState<boolean>(false);
+
   const onToolbarSelect = (tool: Tool) => {
     setCurrentTool(tool);
   };
@@ -59,7 +64,8 @@ const Main = () => {
       newAnnotation.length === 0 &&
       stage &&
       isDrawable(currentTool) &&
-      groupRef.current
+      groupRef.current &&
+      !isDrawPoly
     ) {
       const pinWidth = 25;
       const pinHeight = 35;
@@ -74,19 +80,65 @@ const Main = () => {
         height: 0,
         key: "0",
       };
-      if (currentTool === "pin") {
-        data.x = startX - pinWidth / 2;
-        data.y = startY - pinHeight;
+      switch (currentTool) {
+        case "pin":
+          data.x = startX - pinWidth / 2;
+          data.y = startY - pinHeight;
+          break;
+        case "arrow":
+          data.points = [startX, startY, startX, startY];
+          break;
+        case "poly":
+          data.points = [startX, startY];
+          setIsDrawPoly(true);
       }
 
-      if (currentTool === "arrow") {
-        data.points = [startX, startY, startX, startY];
-      }
       setNewAnnotation([data]);
+    } else if (isDrawPoly && stage && groupRef.current) {
+      const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
+      let nextX = x / stage.scaleX() - groupRef.current.x();
+      let nextY = y / stage.scaleY() - groupRef.current.y();
+
+      if (polyIsOverStart) {
+        if (polyPoints <= 2) return;
+        const points = [
+          ...(newAnnotation[0].points?.slice(
+            0,
+            newAnnotation[0].points.length - 2
+          ) || []),
+        ];
+        const annotationToAdd: ShapeProp = {
+          ...newAnnotation[0],
+          points: [...points, points[0], points[1]],
+          key: `${annotations.length + 1}`,
+          tool: currentTool,
+          isClosed: true,
+        };
+        annotations.push(annotationToAdd);
+        setNewAnnotation([]);
+        setAnnotations(annotations);
+        updatePolyPoints(1);
+        setIsDrawPoly(false);
+        setPolyIsOverStart(false);
+      } else {
+        const points = [
+          ...(newAnnotation[0].points?.slice(
+            0,
+            newAnnotation[0].points.length - 2
+          ) || []),
+          nextX,
+          nextY,
+        ];
+        setNewAnnotation((prev) => {
+          return [{ ...prev[0], points }];
+        });
+        updatePolyPoints((prev) => prev + 1);
+      }
     }
   };
 
   const handleMouseUp = (event: KonvaEventObject<MouseEvent>) => {
+    if (currentTool === "poly") return;
     const stage = event.target?.getStage();
     if (
       newAnnotation.length === 1 &&
@@ -150,14 +202,27 @@ const Main = () => {
         height: endY - startY,
         key: "0",
       };
-      if (currentTool === "pin") {
-        data.x = endX - pinWidth / 2;
-        data.y = endY - pinHeight;
+
+      switch (currentTool) {
+        case "pin":
+          data.x = endX - pinWidth / 2;
+          data.y = endY - pinHeight;
+          break;
+        case "arrow":
+          data.points = [startX, startY, endX, endY];
+          break;
+        case "poly":
+          let length = newAnnotation[0].points?.length || 0;
+          if (length / 2 > polyPoints) {
+            length -= 2;
+          }
+          data.points = [
+            ...(newAnnotation[0].points?.slice(0, length) || []),
+            endX,
+            endY,
+          ];
       }
 
-      if (currentTool === "arrow") {
-        data.points = [startX, startY, endX, endY];
-      }
       setNewAnnotation([data]);
     }
   };
@@ -225,7 +290,10 @@ const Main = () => {
           }}
         >
           <Layer>
-            <Group draggable={!isDrawable(currentTool)} ref={groupRef}>
+            <Group
+              draggable={!isDrawable(currentTool) && selectedId === -1}
+              ref={groupRef}
+            >
               <Image
                 image={image}
                 x={0}
@@ -234,6 +302,14 @@ const Main = () => {
               />
               {annotationsToDraw.map((shape, index) => {
                 switch (shape.tool) {
+                  case "poly":
+                    return (
+                      <Polygon
+                        cbIsOverStart={setPolyIsOverStart}
+                        key={index}
+                        shapeProp={shape}
+                      />
+                    );
                   case "arrow":
                     return (
                       <Arrow
