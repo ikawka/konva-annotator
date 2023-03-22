@@ -7,6 +7,7 @@ export interface AnchorProps {
   x: number;
   y: number;
   visible: boolean;
+  draggable?: boolean;
   onDragMove?: (e: KonvaEventObject<MouseEvent>) => void;
   onDragEnd?: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOver?: (e: KonvaEventObject<MouseEvent>) => void;
@@ -14,7 +15,7 @@ export interface AnchorProps {
 }
 
 export const Anchor = React.forwardRef<Konva.Circle, AnchorProps>(
-  ({ x, y, visible, ...rest }, ref) => {
+  ({ x, y, visible, draggable = true, ...rest }, ref) => {
     return (
       <Circle
         ref={ref}
@@ -23,8 +24,8 @@ export const Anchor = React.forwardRef<Konva.Circle, AnchorProps>(
         radius={6}
         stroke="#83c5ff"
         fill="#fff"
-        strokeWidth={2}
-        draggable
+        strokeWidth={1}
+        draggable={draggable}
         visible={visible}
         {...rest}
       />

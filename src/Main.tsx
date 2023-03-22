@@ -308,6 +308,11 @@ const Main = () => {
                         cbIsOverStart={setPolyIsOverStart}
                         key={index}
                         shapeProp={shape}
+                        onChange={(newAttrs) => {
+                          const r = annotationsToDraw.slice();
+                          r[index] = newAttrs;
+                          setAnnotations(r);
+                        }}
                       />
                     );
                   case "arrow":

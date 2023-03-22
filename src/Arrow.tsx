@@ -43,7 +43,7 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
       y,
     });
     updatePoints((prev) => {
-      return { ...prev, x1: e.target.x(), y1: e.target.y() };
+      return { ...prev, x1: x, y1: y };
     });
   };
 
@@ -55,7 +55,7 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
       points: [x1, y1, x, y],
     });
     updatePoints((prev) => {
-      return { ...prev, x2: e.target.x(), y2: e.target.y() };
+      return { ...prev, x2: x, y2: y };
     });
   };
 
