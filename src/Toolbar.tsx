@@ -24,6 +24,12 @@ const Button = styled.button`
   }
 `;
 
+const Color = styled.input.attrs({ type: "color" })`
+  all: unset;
+  width: 32px;
+  height: 32px;
+`;
+
 export type Tool = "pointer" | "rect" | "pin" | "arrow" | "poly";
 
 type Tools = {
@@ -31,10 +37,12 @@ type Tools = {
 };
 interface ToolbarProps {
   onSelect: (selected: Tool) => void;
+  onColorSelect?: (color: string) => void;
 }
 
-const Toolbar = ({ onSelect }: ToolbarProps) => {
+const Toolbar = ({ onSelect, onColorSelect }: ToolbarProps) => {
   const [selected, setSelected] = useState<Tool>();
+  const [color, setColor] = useState<string>("#ff0000");
 
   const tools: Tools = {
     pointer: faArrowPointer,
@@ -47,6 +55,11 @@ const Toolbar = ({ onSelect }: ToolbarProps) => {
   useEffect(() => {
     if (selected) onSelect(selected);
   }, [selected, onSelect]);
+
+  useEffect(() => {
+    if (onColorSelect) onColorSelect(color);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [color]);
 
   useEffect(() => {
     setSelected("pointer");
@@ -73,6 +86,8 @@ const Toolbar = ({ onSelect }: ToolbarProps) => {
             </Button>
           );
         })}
+        <div style={{ width: 10 }} />
+        <Color value={color} onChange={(e) => setColor(e.target.value)} />
       </div>
     </div>
   );

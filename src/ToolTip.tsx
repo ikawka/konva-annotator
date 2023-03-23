@@ -1,6 +1,9 @@
 import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styled from "styled-components";
+import { Label } from "react-konva";
+import { Html } from "react-konva-utils";
+import { Position } from "./types";
 
 const ToolTipContainer = styled.div`
   background: #333;
@@ -20,23 +23,35 @@ const Arrow = styled.div`
   top: -4px;
 `;
 
-const ToolTip = () => {
+interface ToolTipProps {
+  position: Position;
+}
+
+const ToolTip = ({ position }: ToolTipProps) => {
   return (
-    <ToolTipContainer role="tooltip">
-      <div>My tooltip</div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 16,
-          padding: 4,
+    <Label {...position}>
+      <Html
+        transformFunc={(attr) => {
+          return { ...attr, scaleX: 1, scaleY: 1 };
         }}
       >
-        <FontAwesomeIcon icon={faPencil} />
-        <FontAwesomeIcon icon={faTrash} />
-      </div>
-      <Arrow data-popper-arrow />
-    </ToolTipContainer>
+        <ToolTipContainer role="tooltip">
+          <div>My tooltip</div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 16,
+              padding: 4,
+            }}
+          >
+            <FontAwesomeIcon icon={faPencil} />
+            <FontAwesomeIcon icon={faTrash} />
+          </div>
+          <Arrow data-popper-arrow />
+        </ToolTipContainer>
+      </Html>
+    </Label>
   );
 };
 export default ToolTip;

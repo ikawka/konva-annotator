@@ -5,6 +5,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Anchor } from "./Anchor";
 import { Nodes, ShapeProp } from "./types";
 import { pointsToNodes } from "./utils";
+import Konva from "konva";
 
 interface Props {
   shapeProp: ShapeProp;
@@ -21,47 +22,69 @@ const Polygon = ({
   isSelected,
   onSelect,
 }: Props) => {
+  const shapeRef = React.useRef<Konva.Line>(null);
   const [nodes, updateNodes] = useState<Nodes>([]);
+  const [isDragging, setIsDragging] = React.useState<boolean>(false);
 
   useEffect(() => {
+    // shapeRef.current?.setAttrs({ x: 0, y: 0 });
     updateNodes(() => {
       // split points by pair
       const nodes = pointsToNodes(shapeProp.points || []);
       return nodes.slice(0, nodes.length - 1);
     });
+    setIsDragging(false);
   }, [shapeProp]);
+
   return (
     <>
       <Line
+        ref={shapeRef}
         points={shapeProp.points}
-        stroke="red"
-        strokeWidth={3}
+        stroke={shapeProp.color || "red"}
+        strokeWidth={2}
         fill="rgba(255,255,255,0.5)"
         closed={true}
         draggable={isSelected}
         onClick={onSelect}
+        onDragStart={() => {
+          setIsDragging(true);
+        }}
+        onDragEnd={(e) => {
+          const { x, y } = e.target.getAttrs();
+          onChange({
+            ...shapeProp,
+            points: shapeProp.points?.map((point, index) => {
+              return point + (index % 2 ? y : x);
+            }),
+            x: shapeProp.x + x,
+            y: shapeProp.y + y,
+          });
+          // reset to container
+          e.target.setAttrs({ x: 0, y: 0 });
+        }}
       />
       {(isSelected || !shapeProp.isClosed) &&
-        nodes.map((node, index) => {
+        !isDragging &&
+        nodes.map(([x = 0, y = 0], index) => {
           return (
             <Anchor
               key={index}
               visible
-              x={node[0] || 0}
-              y={node[1] || 0}
+              x={x}
+              y={y}
               draggable={shapeProp.isClosed}
               onMouseOver={(e: KonvaEventObject<MouseEvent>) => {
                 if (!shapeProp.isClosed && index === 0) {
-                  // not done drawing yet
                   cbIsOverStart(true);
                 }
-
-                e.target.scaleX(1.4);
-                e.target.scaleY(1.4);
+                e.target.setAttrs({
+                  scaleX: 1.4,
+                  scaleY: 1.4,
+                });
               }}
               onMouseOut={(e: KonvaEventObject<MouseEvent>) => {
                 if (!shapeProp.isClosed && index === 0) {
-                  // not done drawing yet
                   cbIsOverStart(false);
                 }
                 e.target.setAttrs({
@@ -74,10 +97,10 @@ const Polygon = ({
                 const { x, y } = e.target.getPosition();
                 const nextPoints = pointsToNodes(shapeProp.points || []);
                 nextPoints[index] = [x, y];
+                // the first and last point should be the same
                 if (index === 0) {
                   nextPoints[nextPoints.length - 1] = [x, y];
                 }
-
                 onChange({
                   ...shapeProp,
                   points: flattenDeep(nextPoints),

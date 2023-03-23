@@ -1,5 +1,5 @@
-import { Html, useImage } from "react-konva-utils";
-import { Image, Label } from "react-konva";
+import { useImage } from "react-konva-utils";
+import { Image } from "react-konva";
 import pin from "./imgs/location.svg";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
@@ -84,13 +84,7 @@ const Pin = ({ shapeProps, onSelect, isSelected, onChange }: Props) => {
         }}
         shadowBlur={5}
       />
-      {isSelected && labelPos.x !== 0 && (
-        <Label {...labelPos}>
-          <Html>
-            <ToolTip />
-          </Html>
-        </Label>
-      )}
+      {isSelected && labelPos.x !== 0 && <ToolTip position={labelPos} />}
     </>
   );
 };

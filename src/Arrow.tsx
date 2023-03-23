@@ -30,7 +30,7 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
       <KonvaArrow
         ref={shapeRef}
         points={shapeProps.points || []}
-        stroke="red"
+        stroke={shapeProps.color || "red"}
         strokeWidth={4}
         pointerLength={8}
         pointerWidth={8}
@@ -42,6 +42,7 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
         onDragEnd={(e) => {
           const { x, y } = e.target.getAttrs();
           const [x1, y1, x2, y2] = shapeProps.points ?? [];
+          e.target.setAttrs({ x: 0, y: 0 });
           onChange({
             ...shapeProps,
             points: [x1 + x, y1 + y, x2 + x, y2 + y],

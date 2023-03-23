@@ -32,6 +32,18 @@ interface StageDimension {
   height: number;
 }
 
+const initialAnnotation = [
+  {
+    height: 95.00000000000009,
+    key: "1",
+    rotation: 17.969139740156397,
+    tool: "rect",
+    width: 152.99999999999966,
+    x: 211.38542750719773,
+    y: 137.71630670006996,
+  },
+];
+
 const Main = () => {
   const [image] = useImage(bg);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,7 +53,8 @@ const Main = () => {
     width: 0,
     height: 0,
   });
-  const [annotations, setAnnotations] = useState<ShapeProp[]>([]);
+  const [annotations, setAnnotations] =
+    useState<ShapeProp[]>(initialAnnotation);
   const [newAnnotation, setNewAnnotation] = useState<ShapeProp[]>([]);
   const [selectedId, selectShape] = useState<number>(-1);
   const [currentTool, setCurrentTool] = useState<Tool>("pointer");
@@ -49,6 +62,8 @@ const Main = () => {
   const [isDrawPoly, setIsDrawPoly] = useState<boolean>(false);
   const [polyPoints, updatePolyPoints] = useState<number>(1);
   const [polyIsOverStart, setPolyIsOverStart] = useState<boolean>(false);
+
+  const [color, setColor] = useState<string>("#ff0000");
 
   const onToolbarSelect = (tool: Tool) => {
     setCurrentTool(tool);
@@ -79,6 +94,8 @@ const Main = () => {
         width: 0,
         height: 0,
         key: "0",
+        rotation: 0,
+        color,
       };
       switch (currentTool) {
         case "pin":
@@ -162,6 +179,8 @@ const Main = () => {
         height: Math.abs(height),
         key: `${annotations.length + 1}`,
         tool: currentTool,
+        rotation: 0,
+        color,
       };
 
       if (currentTool === "arrow") {
@@ -171,6 +190,8 @@ const Main = () => {
           y: sy,
           key: `${annotations.length + 1}`,
           tool: currentTool,
+          rotation: 0,
+          color,
         };
       }
       annotations.push(annotationToAdd);
@@ -201,6 +222,8 @@ const Main = () => {
         width: endX - startX,
         height: endY - startY,
         key: "0",
+        rotation: 0,
+        color,
       };
 
       switch (currentTool) {
@@ -244,9 +267,10 @@ const Main = () => {
 
   // this is necessary for real-time drawing
   const annotationsToDraw = [...annotations, ...newAnnotation];
+  console.log(annotationsToDraw);
   return (
     <>
-      <Toolbar onSelect={onToolbarSelect} />
+      <Toolbar onSelect={onToolbarSelect} onColorSelect={setColor} />
       <div className="App" ref={containerRef}>
         <Shadow />
         <Stage

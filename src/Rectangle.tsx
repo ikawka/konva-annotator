@@ -1,42 +1,39 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
-import { Rect, Transformer, Label } from "react-konva";
-import { Html } from "react-konva-utils";
+import { Rect, Transformer } from "react-konva";
 
 import ToolTip from "./ToolTip";
+import { Position, ShapeProp } from "./types";
 
 interface Props {
-  shapeProps: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  shapeProps: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
 }
 
-interface LabelPos {
-  x: number;
-  y: number;
-}
+const minWidth = 5;
+const minHeight = 5;
+const labelOffest = 10;
 
 const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = React.useRef<Konva.Rect>(null);
   const trRef = React.useRef<Konva.Transformer>(null);
   const [isResizing, setIsResizing] = React.useState<boolean>(false);
-  const [labelPos, updateLabelPos] = React.useState<LabelPos>({ x: 0, y: 0 });
+  const [labelPos, updateLabelPos] = React.useState<Position>({ x: 0, y: 0 });
 
   React.useEffect(() => {
     if (isSelected && shapeRef.current) {
       // we need to attach transformer manually
       trRef.current?.nodes([shapeRef.current]);
       trRef.current?.getLayer()?.batchDraw();
+
+      // set label position
+      const { x, y, height } = shapeRef.current.getAttrs();
       updateLabelPos({
-        x: shapeRef.current.x(),
-        y: shapeRef.current.y() + shapeRef.current.height() + 10,
+        x,
+        y: y + height + labelOffest,
       });
     }
   }, [isSelected, shapeRef]);
@@ -49,49 +46,45 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         }}
         onTap={onSelect}
         ref={shapeRef}
-        {...shapeProps}
+        x={shapeProps.x}
+        y={shapeProps.y}
+        height={shapeProps.height}
+        width={shapeProps.width}
+        rotation={shapeProps.rotation}
         draggable={isSelected}
-        stroke="red"
+        stroke={shapeProps.color || "red"}
         fill="rgba(255, 255, 255, 0)"
         strokeWidth={2}
-        onDragMove={() => {
-          if (shapeRef.current) {
-            updateLabelPos({
-              x: shapeRef.current.x(),
-              y: shapeRef.current.y() + shapeRef.current.height() + 10,
-            });
-          }
-        }}
-        onDragEnd={(e) => {
-          onChange({
-            ...shapeProps,
-            x: e.target.x(),
-            y: e.target.y(),
+        onDragMove={(e) => {
+          const { x, y, height } = e.target.getAttrs();
+          updateLabelPos({
+            x,
+            y: y + height + labelOffest,
           });
         }}
-        onMouseMove={() => {
-          const node = shapeRef.current || undefined;
-          if (node) {
-            node.fill("rgba(255, 255, 255, 0.3)");
-          }
+        onDragEnd={(e) => {
+          const { x, y } = e.target.getPosition();
+          onChange({
+            ...shapeProps,
+            x,
+            y,
+          });
         }}
-        onMouseOut={() => {
-          const node = shapeRef.current || undefined;
-          if (node) {
-            node.fill("rgba(255, 255, 255, 0)");
-          }
+        onMouseMove={(e) => {
+          e.target.setAttrs({ fill: "rgba(255, 255, 255, 0.3)" });
         }}
-        onTransform={() => {
+        onMouseOut={(e) => {
+          e.target.setAttrs({ fill: "rgba(255, 255, 255, 0)" });
+        }}
+        onTransform={(e) => {
           setIsResizing(true);
-          const node = shapeRef.current || undefined;
-          if (node) {
-            node.setAttrs({
-              width: Math.max(node.width() * node.scaleX(), 2),
-              height: Math.max(node.height() * node.scaleY(), 2),
-              scaleX: 1,
-              scaleY: 1,
-            });
-          }
+          const { width, height, scaleX, scaleY } = e.target.getAttrs();
+          const nextWidth = Math.max(width * scaleX, minWidth);
+          const nextHeight = Math.max(height * scaleY, minHeight);
+          e.target.setAttrs({
+            width: nextWidth,
+            height: nextHeight,
+          });
         }}
         onTransformEnd={(e) => {
           // transformer is changing scale of the node
@@ -101,23 +94,24 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           setIsResizing(false);
           const node = e.target || undefined;
           if (node) {
-            const scaleX = node.scaleX();
-            const scaleY = node.scaleY();
+            const { x, y, scaleX, scaleY, rotation, width, height } =
+              node.getAttrs();
+            const nextWidth = Math.max(width * scaleX, minWidth);
+            const nextHeight = Math.max(height * scaleY, minHeight);
             // we will reset it back
-            node.scaleX(1);
-            node.scaleY(1);
+            node.scale({ x: 1, y: 1 });
             const data = {
               ...shapeProps,
-              x: node.x(),
-              y: node.y(),
-              // set minimal value
-              width: Math.max(2, node.width() * scaleX),
-              height: Math.max(2, node.height() * scaleY),
+              x,
+              y,
+              width: nextWidth,
+              height: nextHeight,
+              rotation,
             };
             onChange(data);
             updateLabelPos({
-              x: data.x,
-              y: data.y + data.height + 10,
+              x: x,
+              y: y + nextHeight + labelOffest,
             });
           }
         }}
@@ -130,20 +124,14 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
             padding={5}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
-              if (newBox.width < 5 || newBox.height < 5) {
+              if (newBox.width < minWidth || newBox.height < minHeight) {
                 return oldBox;
               }
               return newBox;
             }}
           />
 
-          {!isResizing && labelPos.x !== 0 && (
-            <Label {...labelPos}>
-              <Html>
-                <ToolTip />
-              </Html>
-            </Label>
-          )}
+          {!isResizing && labelPos.x !== 0 && <ToolTip position={labelPos} />}
         </>
       )}
     </React.Fragment>
