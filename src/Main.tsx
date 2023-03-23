@@ -308,10 +308,14 @@ const Main = () => {
                         cbIsOverStart={setPolyIsOverStart}
                         key={index}
                         shapeProp={shape}
+                        isSelected={index === selectedId}
                         onChange={(newAttrs) => {
                           const r = annotationsToDraw.slice();
                           r[index] = newAttrs;
                           setAnnotations(r);
+                        }}
+                        onSelect={() => {
+                          if (!isDrawable(currentTool)) selectShape(index);
                         }}
                       />
                     );

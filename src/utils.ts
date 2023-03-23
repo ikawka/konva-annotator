@@ -1,3 +1,6 @@
+import { chunk } from "lodash";
+import { Nodes, Points } from "./types";
+
 export const getCorner = (
   pivotX: number,
   pivotY: number,
@@ -78,3 +81,5 @@ const drawble = ["rect", "pin", "arrow", "poly"] as const;
 type Drawable = typeof drawble[number];
 export const isDrawable = (tool: any): tool is Drawable =>
   drawble.includes(tool);
+
+export const pointsToNodes = (points: Points): Nodes => chunk(points, 2);

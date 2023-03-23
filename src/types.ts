@@ -10,3 +10,6 @@ export interface ShapeProp {
   key: string;
   isClosed?: boolean;
 }
+
+export type Points = number[];
+export type Nodes = number[][];
