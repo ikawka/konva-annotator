@@ -77,7 +77,7 @@ export const getTotalBox = (boxes: Box[]) => {
   };
 };
 
-const drawble = ["rect", "pin", "arrow", "poly"] as const;
+const drawble = ["rect", "pin", "arrow", "poly", "freehand"] as const;
 type Drawable = typeof drawble[number];
 export const isDrawable = (tool: any): tool is Drawable =>
   drawble.includes(tool);

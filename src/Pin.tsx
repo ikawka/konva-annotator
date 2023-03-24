@@ -1,20 +1,17 @@
-import { useImage } from "react-konva-utils";
-import { Image } from "react-konva";
-import pin from "./imgs/location.svg";
+import { Circle, Group, Path, Text } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
 import Konva from "konva";
 import ToolTip from "./ToolTip";
+import { ShapeProp } from "./types";
 
 // this is for customizable color pin
-const pinSrc =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="white" d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>';
+const pinPath =
+  "m14 33.2c3.4-4.3 11-14.6 11-20.5 0-7-5.6-12.7-12.5-12.7-6.9 0-12.5 5.7-12.5 12.7 0 5.9 7.6 16.2 11 20.5 0.8 1 2.2 1 3 0z";
 
 interface Props {
-  shapeProps: {
-    x: number;
-    y: number;
-  };
+  count: number;
+  shapeProps: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
@@ -25,13 +22,12 @@ interface LabelPos {
   y: number;
 }
 
-const Pin = ({ shapeProps, onSelect, isSelected, onChange }: Props) => {
-  const shapeRef = React.useRef<Konva.Image>(null);
+const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
+  const shapeRef = React.useRef<Konva.Group>(null);
   const [labelPos, updateLabelPos] = React.useState<LabelPos>({ x: 0, y: 0 });
 
-  const [image] = useImage(pin);
   const width = 25;
-  const height = 35;
+  const height = 34;
 
   React.useEffect(() => {
     if (isSelected && shapeRef.current) {
@@ -44,24 +40,14 @@ const Pin = ({ shapeProps, onSelect, isSelected, onChange }: Props) => {
 
   return (
     <>
-      <Image
+      <Group
         ref={shapeRef}
-        image={image}
-        x={shapeProps.x}
-        y={shapeProps.y}
         height={height}
         width={width}
+        x={shapeProps.x}
+        y={shapeProps.y}
         draggable={isSelected}
         onClick={(e) => onSelect(e)}
-        onMouseOver={(e) => {
-          e.target.opacity(0.6);
-        }}
-        onMouseOut={(e) => {
-          e.target.opacity(1);
-        }}
-        strokeWidth={1}
-        stroke="white"
-        strokeEnabled={isSelected}
         onDragMove={() => {
           if (shapeRef.current) {
             updateLabelPos({
@@ -83,7 +69,26 @@ const Pin = ({ shapeProps, onSelect, isSelected, onChange }: Props) => {
           y: 2,
         }}
         shadowBlur={5}
-      />
+      >
+        <Path
+          x={0}
+          y={0}
+          data={pinPath}
+          fill="#162685"
+          strokeWidth={1}
+          stroke="white"
+          strokeEnabled={isSelected}
+        />
+        <Circle x={width / 2} y={12} radius={10} fill="white" />
+        <Text
+          x={0}
+          y={12 - 5}
+          width={width}
+          text={`${count}`}
+          fill="black"
+          align="center"
+        />
+      </Group>
       {isSelected && labelPos.x !== 0 && <ToolTip position={labelPos} />}
     </>
   );

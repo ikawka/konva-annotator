@@ -5,6 +5,7 @@ import {
   faDrawPolygon,
   faArrowPointer,
   IconDefinition,
+  faPenAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
@@ -30,7 +31,7 @@ const Color = styled.input.attrs({ type: "color" })`
   height: 32px;
 `;
 
-export type Tool = "pointer" | "rect" | "pin" | "arrow" | "poly";
+export type Tool = "pointer" | "rect" | "pin" | "arrow" | "poly" | "freehand";
 
 type Tools = {
   [key in Tool]: IconDefinition;
@@ -50,6 +51,7 @@ const Toolbar = ({ onSelect, onColorSelect }: ToolbarProps) => {
     pin: faLocationDot,
     arrow: faArrowRight,
     poly: faDrawPolygon,
+    freehand: faPenAlt,
   };
 
   useEffect(() => {

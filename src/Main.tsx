@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Layer, Stage, Image, Group } from "react-konva";
+import { Layer, Stage, Image, Group, Line } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 // import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
@@ -15,6 +15,7 @@ import styled from "styled-components";
 import Arrow from "./Arrow";
 import { ShapeProp } from "./types";
 import Polygon from "./Polygon";
+import Freehand from "./Freehand";
 
 const Shadow = styled.div`
   position: absolute;
@@ -65,6 +66,8 @@ const Main = () => {
 
   const [color, setColor] = useState<string>("#ff0000");
 
+  let pinCnt = 0;
+
   const onToolbarSelect = (tool: Tool) => {
     setCurrentTool(tool);
   };
@@ -108,6 +111,9 @@ const Main = () => {
         case "poly":
           data.points = [startX, startY];
           setIsDrawPoly(true);
+          break;
+        case "freehand":
+          data.points = [startX, startY];
       }
 
       setNewAnnotation([data]);
@@ -172,7 +178,7 @@ const Main = () => {
       const height = endY - sy;
 
       // normalize negative values before adding
-      let annotationToAdd: ShapeProp = {
+      let data: ShapeProp = {
         x: width < 0 ? sx + width : sx,
         y: height < 0 ? sy + height : sy,
         width: Math.abs(width),
@@ -183,18 +189,15 @@ const Main = () => {
         color,
       };
 
-      if (currentTool === "arrow") {
-        annotationToAdd = {
-          points: [sx, sy, endX, endY],
-          x: sx,
-          y: sy,
-          key: `${annotations.length + 1}`,
-          tool: currentTool,
-          rotation: 0,
-          color,
-        };
+      switch (currentTool) {
+        case "arrow":
+          data = { ...data, points: [sx, sy, endX, endY], x: sx, y: sy };
+          break;
+        case "freehand":
+          data = { ...data, points: newAnnotation[0].points };
       }
-      annotations.push(annotationToAdd);
+
+      annotations.push(data);
       setNewAnnotation([]);
       setAnnotations(annotations);
     }
@@ -244,6 +247,9 @@ const Main = () => {
             endX,
             endY,
           ];
+          break;
+        case "freehand":
+          data.points = [...(newAnnotation[0].points || []), x, y];
       }
 
       setNewAnnotation([data]);
@@ -267,7 +273,7 @@ const Main = () => {
 
   // this is necessary for real-time drawing
   const annotationsToDraw = [...annotations, ...newAnnotation];
-  console.log(annotationsToDraw);
+  console.log(annotations);
   return (
     <>
       <Toolbar onSelect={onToolbarSelect} onColorSelect={setColor} />
@@ -363,6 +369,7 @@ const Main = () => {
                     return (
                       <Pin
                         key={index}
+                        count={(pinCnt += 1)}
                         shapeProps={{ ...shape }}
                         isSelected={index === selectedId}
                         onSelect={() => {
@@ -387,6 +394,23 @@ const Main = () => {
                           ...shape,
                           width: shape.width ?? 0,
                           height: shape.height ?? 0,
+                        }}
+                        onChange={(newAttrs) => {
+                          const r = annotationsToDraw.slice();
+                          r[index] = newAttrs;
+                          setAnnotations(r);
+                        }}
+                      />
+                    );
+
+                  case "freehand":
+                    return (
+                      <Freehand
+                        key={index}
+                        isSelected={index === selectedId}
+                        shapeProps={shape}
+                        onSelect={() => {
+                          if (!isDrawable(currentTool)) selectShape(index);
                         }}
                         onChange={(newAttrs) => {
                           const r = annotationsToDraw.slice();

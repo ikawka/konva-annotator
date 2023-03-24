@@ -9,8 +9,11 @@ export interface ShapeProp {
   width?: number;
   height?: number;
   key: string;
-  isClosed?: boolean;
   rotation: number;
+  strokeWidth?: number;
+  isClosed?: boolean;
+  scaleX?: number;
+  scaleY?: number;
 }
 
 export type Points = number[];
