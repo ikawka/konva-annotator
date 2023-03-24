@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { Layer, Stage, Image, Group, Line } from "react-konva";
+import { Layer, Stage, Image, Group } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 // import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 import "./App.css";
 import Rectangle from "./Rectangle";
 import bg from "./imgs/apartment-buildings.webp";
-import Toolbar, { Tool } from "./Toolbar";
-import { isDrawable } from "./utils";
+import Toolbar from "./Toolbar";
+import { getDistance, isDrawable } from "./utils";
 import Pin from "./Pin";
 import { useImage } from "react-konva-utils";
 import Konva from "konva";
 import styled from "styled-components";
 import Arrow from "./Arrow";
-import { ShapeProp } from "./types";
+import { ShapeProp, Tool } from "./types";
 import Polygon from "./Polygon";
 import Freehand from "./Freehand";
 
@@ -33,7 +33,7 @@ interface StageDimension {
   height: number;
 }
 
-const initialAnnotation = [
+const initialAnnotation: ShapeProp[] = [
   {
     height: 95.00000000000009,
     key: "1",
@@ -65,6 +65,7 @@ const Main = () => {
   const [polyIsOverStart, setPolyIsOverStart] = useState<boolean>(false);
 
   const [color, setColor] = useState<string>("#ff0000");
+  const [strokeWidth, setStrokeWidth] = useState<number>(3);
 
   let pinCnt = 0;
 
@@ -99,11 +100,13 @@ const Main = () => {
         key: "0",
         rotation: 0,
         color,
+        strokeWidth,
       };
       switch (currentTool) {
         case "pin":
           data.x = startX - pinWidth / 2;
           data.y = startY - pinHeight;
+          data.strokeWidth = 0;
           break;
         case "arrow":
           data.points = [startX, startY, startX, startY];
@@ -187,11 +190,18 @@ const Main = () => {
         tool: currentTool,
         rotation: 0,
         color,
+        strokeWidth,
       };
 
       switch (currentTool) {
+        case "pin":
+          data.strokeWidth = 0;
+          break;
         case "arrow":
           data = { ...data, points: [sx, sy, endX, endY], x: sx, y: sy };
+          if (getDistance(sx, sy, endY, endY) < 5) {
+            return;
+          }
           break;
         case "freehand":
           data = { ...data, points: newAnnotation[0].points };
@@ -227,12 +237,14 @@ const Main = () => {
         key: "0",
         rotation: 0,
         color,
+        strokeWidth,
       };
 
       switch (currentTool) {
         case "pin":
           data.x = endX - pinWidth / 2;
           data.y = endY - pinHeight;
+          data.strokeWidth = 0;
           break;
         case "arrow":
           data.points = [startX, startY, endX, endY];
@@ -249,7 +261,7 @@ const Main = () => {
           ];
           break;
         case "freehand":
-          data.points = [...(newAnnotation[0].points || []), x, y];
+          data.points = [...(newAnnotation[0].points || []), endX, endY];
       }
 
       setNewAnnotation([data]);
@@ -276,7 +288,11 @@ const Main = () => {
   console.log(annotations);
   return (
     <>
-      <Toolbar onSelect={onToolbarSelect} onColorSelect={setColor} />
+      <Toolbar
+        onSelect={onToolbarSelect}
+        onColorSelect={setColor}
+        onStroWidthkeSet={setStrokeWidth}
+      />
       <div className="App" ref={containerRef}>
         <Shadow />
         <Stage
@@ -287,36 +303,38 @@ const Main = () => {
           onWheel={(e) => {
             // stop default scrolling
             e.evt.preventDefault();
-            var scaleBy = 1.05;
-            const stage = e.target?.getStage();
-            // var pointer = stage?.getPointerPosition();
-            if (!stage || !groupRef.current) return;
-            var oldScale = stage.scaleX();
+            const scaleBy = 1.05;
+            const stage = e.target.getStage();
+            // const pointer = stage?.getPointerPosition();
+            if (stage) {
+              if (!stage || !groupRef.current) return;
+              const oldScale = stage.scaleX();
 
-            // var mousePointTo = {
-            //   x: (pointer.x - stage.x()) / oldScale,
-            //   y: (pointer.y - stage.y()) / oldScale,
-            // };
+              // how to scale? Zoom in? Or zoom out?
+              let direction = e.evt.deltaY > 0 ? 1 : -1;
 
-            // how to scale? Zoom in? Or zoom out?
-            let direction = e.evt.deltaY > 0 ? 1 : -1;
+              // when we zoom on trackpad, e.evt.ctrlKey is true
+              // in that case lets revert direction
+              if (e.evt.ctrlKey) {
+                direction = -direction;
+              }
 
-            // when we zoom on trackpad, e.evt.ctrlKey is true
-            // in that case lets revert direction
-            if (e.evt.ctrlKey) {
-              direction = -direction;
+              const newScale =
+                direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+              const scaleVal = { x: newScale, y: newScale };
+              stage.scale(scaleVal);
+              // const mousePointTo = {
+              //   x: (pointer.x - stage.x()) / oldScale,
+              //   y: (pointer.y - stage.y()) / oldScale,
+              // };
+
+              // const newPos = {
+              //   x: pointer.x - mousePointTo.x * newScale,
+              //   y: pointer.y - mousePointTo.y * newScale,
+              // };
+              // stage.position(newPos);
             }
-
-            var newScale =
-              direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-            const scaleVal = { x: newScale, y: newScale };
-            stage.scale(scaleVal);
-            // var newPos = {
-            //   x: pointer.x - mousePointTo.x * newScale,
-            //   y: pointer.y - mousePointTo.y * newScale,
-            // };
-            // stage.position(newPos);
           }}
         >
           <Layer>

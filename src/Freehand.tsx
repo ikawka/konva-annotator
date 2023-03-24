@@ -32,7 +32,7 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         ref={shapeRef}
         points={shapeProps.points}
         stroke={shapeProps.color}
-        strokeWidth={4}
+        strokeWidth={shapeProps.strokeWidth}
         onClick={onSelect}
         draggable={isSelected}
         scaleX={shapeProps.scaleX}

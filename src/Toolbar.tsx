@@ -10,6 +10,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { Tool } from "./types";
+import { isStrokable } from "./utils";
 
 const Button = styled.button`
   all: unset;
@@ -29,9 +31,31 @@ const Color = styled.input.attrs({ type: "color" })`
   all: unset;
   width: 32px;
   height: 32px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  :hover,
+  :focus {
+    border-color: #c0c0c0;
+  }
 `;
 
-export type Tool = "pointer" | "rect" | "pin" | "arrow" | "poly" | "freehand";
+const Stroke = styled.input.attrs({ type: "number" })`
+  all: unset;
+  width: 36px;
+  height: 32px;
+  text-align: center;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  :hover,
+  :focus {
+    border-color: #c0c0c0;
+  }
+  :disabled {
+    color: #c0c0c0;
+  }
+`;
 
 type Tools = {
   [key in Tool]: IconDefinition;
@@ -39,11 +63,20 @@ type Tools = {
 interface ToolbarProps {
   onSelect: (selected: Tool) => void;
   onColorSelect?: (color: string) => void;
+  onStroWidthkeSet?: (strokeWidth: number) => void;
 }
 
-const Toolbar = ({ onSelect, onColorSelect }: ToolbarProps) => {
+const strokeWidthMin = 1;
+const strokeWidthMax = 10;
+
+const Toolbar = ({
+  onSelect,
+  onColorSelect,
+  onStroWidthkeSet,
+}: ToolbarProps) => {
   const [selected, setSelected] = useState<Tool>();
   const [color, setColor] = useState<string>("#ff0000");
+  const [strokeWidth, setStrokeWidth] = useState<number>(3);
 
   const tools: Tools = {
     pointer: faArrowPointer,
@@ -64,7 +97,13 @@ const Toolbar = ({ onSelect, onColorSelect }: ToolbarProps) => {
   }, [color]);
 
   useEffect(() => {
+    if (onStroWidthkeSet) onStroWidthkeSet(strokeWidth);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [strokeWidth]);
+
+  useEffect(() => {
     setSelected("pointer");
+    setStrokeWidth(3);
   }, []);
 
   return (
@@ -76,7 +115,7 @@ const Toolbar = ({ onSelect, onColorSelect }: ToolbarProps) => {
         fontSize: 18,
       }}
     >
-      <div style={{ display: "flex", padding: "8px 0" }}>
+      <div style={{ display: "flex", padding: "8px 0", gap: 4 }}>
         {(Object.keys(tools) as Tool[]).map((item) => {
           return (
             <Button
@@ -89,7 +128,19 @@ const Toolbar = ({ onSelect, onColorSelect }: ToolbarProps) => {
           );
         })}
         <div style={{ width: 10 }} />
+
         <Color value={color} onChange={(e) => setColor(e.target.value)} />
+        <Stroke
+          value={strokeWidth}
+          onChange={(e) => {
+            const val = parseInt(e.target.value);
+            if (val < strokeWidthMin || val > strokeWidthMax) return;
+            setStrokeWidth(val);
+          }}
+          min={strokeWidthMin}
+          max={strokeWidthMax}
+          disabled={!isStrokable(selected)}
+        />
       </div>
     </div>
   );

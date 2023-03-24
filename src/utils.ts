@@ -1,5 +1,12 @@
 import { chunk } from "lodash";
-import { Nodes, Points } from "./types";
+import {
+  Drawable,
+  Nodes,
+  Points,
+  drawable,
+  Strokable,
+  strokable,
+} from "./types";
 
 export const getCorner = (
   pivotX: number,
@@ -77,9 +84,16 @@ export const getTotalBox = (boxes: Box[]) => {
   };
 };
 
-const drawble = ["rect", "pin", "arrow", "poly", "freehand"] as const;
-type Drawable = typeof drawble[number];
 export const isDrawable = (tool: any): tool is Drawable =>
-  drawble.includes(tool);
+  drawable.includes(tool);
+export const isStrokable = (tool: any): tool is Strokable =>
+  strokable.includes(tool);
 
 export const pointsToNodes = (points: Points): Nodes => chunk(points, 2);
+
+export const getDistance = (x1: number, y1: number, x2: number, y2: number) => {
+  let y = x2 - x1;
+  let x = y2 - y1;
+
+  return Math.sqrt(x * x + y * y);
+};

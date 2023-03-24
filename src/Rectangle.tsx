@@ -54,7 +54,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         draggable={isSelected}
         stroke={shapeProps.color || "red"}
         fill="rgba(255, 255, 255, 0)"
-        strokeWidth={2}
+        strokeWidth={shapeProps.strokeWidth}
         onDragMove={(e) => {
           const { x, y, height } = e.target.getAttrs();
           updateLabelPos({
@@ -78,13 +78,13 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         }}
         onTransform={(e) => {
           setIsResizing(true);
-          const { width, height, scaleX, scaleY } = e.target.getAttrs();
-          const nextWidth = Math.max(width * scaleX, minWidth);
-          const nextHeight = Math.max(height * scaleY, minHeight);
-          e.target.setAttrs({
-            width: nextWidth,
-            height: nextHeight,
-          });
+          // const { width, height, scaleX, scaleY } = e.target.getAttrs();
+          // const nextWidth = Math.max(width * scaleX, minWidth);
+          // const nextHeight = Math.max(height * scaleY, minHeight);
+          // e.target.setAttrs({
+          //   width: nextWidth,
+          //   height: nextHeight,
+          // });
         }}
         onTransformEnd={(e) => {
           // transformer is changing scale of the node

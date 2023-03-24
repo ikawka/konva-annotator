@@ -31,9 +31,9 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
         ref={shapeRef}
         points={shapeProps.points || []}
         stroke={shapeProps.color || "red"}
-        strokeWidth={4}
-        pointerLength={8}
-        pointerWidth={8}
+        strokeWidth={shapeProps.strokeWidth}
+        pointerLength={shapeProps.strokeWidth || 4 * 2}
+        pointerWidth={shapeProps.strokeWidth || 4 * 2}
         onClick={onSelect}
         draggable={isSelected}
         onDragStart={() => {
