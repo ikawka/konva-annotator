@@ -5,6 +5,7 @@ import { Rect, Transformer } from "react-konva";
 
 import ToolTip from "./ToolTip";
 import { Position, ShapeProp } from "./types";
+import { rotatePoint } from "./utils";
 
 interface Props {
   shapeProps: ShapeProp;
@@ -109,9 +110,15 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
               rotation,
             };
             onChange(data);
+            // https://stackoverflow.com/questions/59098408/konva-get-corners-coordinate-of-a-rotated-rectangle
+            const rPos = rotatePoint(
+              { x, y: y + nextHeight },
+              { x, y },
+              rotation
+            );
             updateLabelPos({
-              x: x,
-              y: y + nextHeight + labelOffest,
+              x: rPos.x,
+              y: rPos.y,
             });
           }
         }}

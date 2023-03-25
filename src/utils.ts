@@ -6,6 +6,7 @@ import {
   drawable,
   Strokable,
   strokable,
+  Position,
 } from "./types";
 
 export const getCorner = (
@@ -97,3 +98,15 @@ export const getDistance = (x1: number, y1: number, x2: number, y2: number) => {
 
   return Math.sqrt(x * x + y * y);
 };
+
+export function rotatePoint(pt: Position, o: Position, a: number) {
+  var angle = a * (Math.PI / 180); // Convert to radians
+
+  var rotatedX =
+    Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
+
+  var rotatedY =
+    Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;
+
+  return { x: rotatedX, y: rotatedY };
+}
