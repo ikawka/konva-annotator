@@ -5,7 +5,7 @@ import { Rect, Transformer } from "react-konva";
 
 import ToolTip from "./ToolTip";
 import { Position, ShapeProp } from "./types";
-import { rotatePoint } from "./utils";
+import { getBoundingBox } from "./utils";
 
 interface Props {
   shapeProps: ShapeProp;
@@ -31,10 +31,11 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
       trRef.current?.getLayer()?.batchDraw();
 
       // set label position
-      const { x, y, height } = shapeRef.current.getAttrs();
+      const { x, y, height, width, rotation } = shapeRef.current.getAttrs();
+      const bounding = getBoundingBox(x, y, width, height, rotation);
       updateLabelPos({
-        x,
-        y: y + height + labelOffest,
+        x: bounding.x,
+        y: bounding.y + bounding.height + labelOffest,
       });
     }
   }, [isSelected, shapeRef]);
@@ -57,10 +58,11 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         fill="rgba(255, 255, 255, 0)"
         strokeWidth={shapeProps.strokeWidth}
         onDragMove={(e) => {
-          const { x, y, height } = e.target.getAttrs();
+          const { x, y, height, width, rotation } = e.target.getAttrs();
+          const bounding = getBoundingBox(x, y, width, height, rotation);
           updateLabelPos({
-            x,
-            y: y + height + labelOffest,
+            x: bounding.x,
+            y: bounding.y + bounding.height + labelOffest,
           });
         }}
         onDragEnd={(e) => {
@@ -111,17 +113,21 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
             };
             onChange(data);
             // https://stackoverflow.com/questions/59098408/konva-get-corners-coordinate-of-a-rotated-rectangle
-            const rPos = rotatePoint(
-              { x, y: y + nextHeight },
-              { x, y },
+            const bounding = getBoundingBox(
+              x,
+              y,
+              nextWidth,
+              nextHeight,
               rotation
             );
+
             updateLabelPos({
-              x: rPos.x,
-              y: rPos.y,
+              x: bounding.x,
+              y: bounding.y + bounding.height + labelOffest,
             });
           }
         }}
+        zIndex={6}
       />
       {isSelected && (
         <>
@@ -136,8 +142,8 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
               }
               return newBox;
             }}
+            zIndex={5}
           />
-
           {!isResizing && labelPos.x !== 0 && <ToolTip position={labelPos} />}
         </>
       )}

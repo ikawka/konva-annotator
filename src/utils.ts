@@ -110,3 +110,28 @@ export function rotatePoint(pt: Position, o: Position, a: number) {
 
   return { x: rotatedX, y: rotatedY };
 }
+
+export const getBoundingBox = (
+  x: number,
+  y: number,
+  nextWidth: number,
+  nextHeight: number,
+  rotation: number
+) => {
+  const tl = rotatePoint({ x, y }, { x, y }, rotation);
+  const tr = rotatePoint({ x: x + nextWidth, y }, { x, y }, rotation);
+  const br = rotatePoint(
+    { x: x + nextWidth, y: y + nextHeight },
+    { x, y },
+    rotation
+  );
+  const bl = rotatePoint({ x: x, y: y + nextHeight }, { x, y }, rotation);
+  const deltaX = [tl.x, tr.x, br.x, bl.x];
+  const deltaY = [tl.y, tr.y, br.y, bl.y];
+
+  const minX = Math.min(...deltaX);
+  const minY = Math.min(...deltaY);
+  const maxX = Math.max(...deltaX);
+  const maxY = Math.max(...deltaY);
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+};
