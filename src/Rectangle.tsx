@@ -1,9 +1,17 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import React from "react";
-import { Rect, Transformer } from "react-konva";
+import React, { useState, useEffect, useRef } from "react";
+import { Rect } from "react-konva";
+import {
+  LABEL_OFFSET,
+  RECT_MIN_WIDTH,
+  RECT_MIN_HEIGHT,
+  DEFAULT_COLOR,
+  RECT_COLOR,
+} from "./constants";
 
 import ToolTip from "./ToolTip";
+import Transformer from "./Transformer";
 import { Position, ShapeProp } from "./types";
 import { getBoundingBox } from "./utils";
 
@@ -14,29 +22,27 @@ interface Props {
   onChange: (props: any) => void;
 }
 
-const minWidth = 5;
-const minHeight = 5;
-const labelOffest = 10;
-
 const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
-  const shapeRef = React.useRef<Konva.Rect>(null);
-  const trRef = React.useRef<Konva.Transformer>(null);
-  const [isResizing, setIsResizing] = React.useState<boolean>(false);
-  const [labelPos, updateLabelPos] = React.useState<Position>({ x: 0, y: 0 });
+  const shapeRef = useRef<Konva.Rect>(null);
 
-  React.useEffect(() => {
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [labelPos, updateLabelPos] = useState<Position>({ x: 0, y: 0 });
+
+  const handleLabelPosition = (data: any) => {
+    const { x, y, height, width, rotation } = data;
+    const rotated = getBoundingBox(x, y, width, height, rotation);
+
+    updateLabelPos({
+      x: rotated.x,
+      y: rotated.y + rotated.height + LABEL_OFFSET,
+    });
+  };
+
+  useEffect(() => {
     if (isSelected && shapeRef.current) {
-      // we need to attach transformer manually
-      trRef.current?.nodes([shapeRef.current]);
-      trRef.current?.getLayer()?.batchDraw();
-
       // set label position
       const { x, y, height, width, rotation } = shapeRef.current.getAttrs();
-      const bounding = getBoundingBox(x, y, width, height, rotation);
-      updateLabelPos({
-        x: bounding.x,
-        y: bounding.y + bounding.height + labelOffest,
-      });
+      handleLabelPosition({ x, y, height, width, rotation });
     }
   }, [isSelected, shapeRef]);
 
@@ -54,16 +60,12 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         width={shapeProps.width}
         rotation={shapeProps.rotation}
         draggable={isSelected}
-        stroke={shapeProps.color || "red"}
-        fill="rgba(255, 255, 255, 0)"
+        stroke={shapeProps.color || DEFAULT_COLOR}
+        fill={RECT_COLOR.MOUSE_OUT}
         strokeWidth={shapeProps.strokeWidth}
         onDragMove={(e) => {
           const { x, y, height, width, rotation } = e.target.getAttrs();
-          const bounding = getBoundingBox(x, y, width, height, rotation);
-          updateLabelPos({
-            x: bounding.x,
-            y: bounding.y + bounding.height + labelOffest,
-          });
+          handleLabelPosition({ x, y, height, width, rotation });
         }}
         onDragEnd={(e) => {
           const { x, y } = e.target.getPosition();
@@ -74,20 +76,13 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           });
         }}
         onMouseMove={(e) => {
-          e.target.setAttrs({ fill: "rgba(255, 255, 255, 0.3)" });
+          e.target.setAttrs({ fill: RECT_COLOR.MOUSE_OVER });
         }}
         onMouseOut={(e) => {
-          e.target.setAttrs({ fill: "rgba(255, 255, 255, 0)" });
+          e.target.setAttrs({ fill: RECT_COLOR.MOUSE_OUT });
         }}
-        onTransform={(e) => {
+        onTransform={() => {
           setIsResizing(true);
-          // const { width, height, scaleX, scaleY } = e.target.getAttrs();
-          // const nextWidth = Math.max(width * scaleX, minWidth);
-          // const nextHeight = Math.max(height * scaleY, minHeight);
-          // e.target.setAttrs({
-          //   width: nextWidth,
-          //   height: nextHeight,
-          // });
         }}
         onTransformEnd={(e) => {
           // transformer is changing scale of the node
@@ -99,8 +94,8 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           if (node) {
             const { x, y, scaleX, scaleY, rotation, width, height } =
               node.getAttrs();
-            const nextWidth = Math.max(width * scaleX, minWidth);
-            const nextHeight = Math.max(height * scaleY, minHeight);
+            const nextWidth = Math.max(width * scaleX, RECT_MIN_WIDTH);
+            const nextHeight = Math.max(height * scaleY, RECT_MIN_HEIGHT);
             // we will reset it back
             node.scale({ x: 1, y: 1 });
             const data = {
@@ -112,38 +107,14 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
               rotation,
             };
             onChange(data);
-            // https://stackoverflow.com/questions/59098408/konva-get-corners-coordinate-of-a-rotated-rectangle
-            const bounding = getBoundingBox(
-              x,
-              y,
-              nextWidth,
-              nextHeight,
-              rotation
-            );
-
-            updateLabelPos({
-              x: bounding.x,
-              y: bounding.y + bounding.height + labelOffest,
-            });
+            handleLabelPosition(data);
           }
         }}
-        zIndex={6}
       />
-      {isSelected && (
+
+      {isSelected && shapeRef.current && (
         <>
-          <Transformer
-            ref={trRef}
-            ignoreStroke
-            padding={5}
-            boundBoxFunc={(oldBox, newBox) => {
-              // limit resize
-              if (newBox.width < minWidth || newBox.height < minHeight) {
-                return oldBox;
-              }
-              return newBox;
-            }}
-            zIndex={5}
-          />
+          <Transformer nodes={[shapeRef.current]} />
           {!isResizing && labelPos.x !== 0 && <ToolTip position={labelPos} />}
         </>
       )}

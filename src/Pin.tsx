@@ -4,10 +4,7 @@ import React from "react";
 import Konva from "konva";
 import ToolTip from "./ToolTip";
 import { ShapeProp } from "./types";
-
-// this is for customizable color pin
-const pinPath =
-  "m14 33.2c3.4-4.3 11-14.6 11-20.5 0-7-5.6-12.7-12.5-12.7-6.9 0-12.5 5.7-12.5 12.7 0 5.9 7.6 16.2 11 20.5 0.8 1 2.2 1 3 0z";
+import { PIN_PATH, PIN_COLOR } from "./constants";
 
 interface Props {
   count: number;
@@ -63,7 +60,7 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
             y: e.target.y(),
           });
         }}
-        shadowColor="rgba(0,0,0,0.5)"
+        shadowColor={PIN_COLOR.SHADOW}
         shadowOffset={{
           x: -2,
           y: 2,
@@ -73,19 +70,19 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
         <Path
           x={0}
           y={0}
-          data={pinPath}
-          fill="#162685"
+          data={PIN_PATH}
+          fill={PIN_COLOR.PATH_FILL}
           strokeWidth={1}
-          stroke="white"
+          stroke={PIN_COLOR.PATH_STROKE}
           strokeEnabled={isSelected}
         />
-        <Circle x={width / 2} y={12} radius={10} fill="white" />
+        <Circle x={width / 2} y={12} radius={10} fill={PIN_COLOR.CIRCLE_FILL} />
         <Text
           x={0}
           y={12 - 5}
           width={width}
           text={`${count}`}
-          fill="black"
+          fill={PIN_COLOR.TEXT}
           align="center"
         />
       </Group>

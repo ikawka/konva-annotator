@@ -1,7 +1,8 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
-import { Line, Transformer } from "react-konva";
+import { Line } from "react-konva";
+import Transformer from "./Transformer";
 import { ShapeProp } from "./types";
 
 interface Props {
@@ -10,9 +11,6 @@ interface Props {
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
 }
-
-const minWidth = 5;
-const minHeight = 5;
 
 const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = React.useRef<Konva.Line>(null);
@@ -37,8 +35,18 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         draggable={isSelected}
         scaleX={shapeProps.scaleX}
         scaleY={shapeProps.scaleY}
+        onDragEnd={(e) => {
+          const { x, y } = e.target.getPosition();
+          onChange({
+            ...shapeProps,
+            x,
+            y,
+          });
+        }}
         onTransformEnd={(e) => {
-          const { x, y, scaleX, scaleY, rotation } = e.target.getAttrs();
+          const { x, y, scaleX, scaleY, width, height, rotation } =
+            e.target.getAttrs();
+          console.log({ x, y, width, height, scaleX, scaleY, rotation });
           onChange({
             ...shapeProps,
             x,
@@ -49,19 +57,8 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           });
         }}
       />
-      {isSelected && (
-        <Transformer
-          ref={trRef}
-          ignoreStroke
-          padding={5}
-          boundBoxFunc={(oldBox, newBox) => {
-            // limit resize
-            if (newBox.width < minWidth || newBox.height < minHeight) {
-              return oldBox;
-            }
-            return newBox;
-          }}
-        />
+      {isSelected && shapeRef.current && (
+        <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
       )}
     </>
   );

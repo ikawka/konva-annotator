@@ -65,26 +65,6 @@ export interface Box {
   height: number;
 }
 
-export const getTotalBox = (boxes: Box[]) => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  boxes.forEach((box) => {
-    minX = Math.min(minX, box.x);
-    minY = Math.min(minY, box.y);
-    maxX = Math.max(maxX, box.x + box.width);
-    maxY = Math.max(maxY, box.y + box.height);
-  });
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
-  };
-};
-
 export const isDrawable = (tool: any): tool is Drawable =>
   drawable.includes(tool);
 export const isStrokable = (tool: any): tool is Strokable =>
@@ -92,15 +72,22 @@ export const isStrokable = (tool: any): tool is Strokable =>
 
 export const pointsToNodes = (points: Points): Nodes => chunk(points, 2);
 
-export const getDistance = (x1: number, y1: number, x2: number, y2: number) => {
-  let y = x2 - x1;
-  let x = y2 - y1;
-
-  return Math.sqrt(x * x + y * y);
+export const getLineDistance = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+) => {
+  return Math.hypot(x2 - x1, y2 - y1);
 };
 
-export function rotatePoint(pt: Position, o: Position, a: number) {
-  var angle = a * (Math.PI / 180); // Convert to radians
+// reference: https://stackoverflow.com/questions/59098408/konva-get-corners-coordinate-of-a-rotated-rectangle
+// pt = {x,y} of point to rotate,
+// o = {x, y} of rotation origin,
+// rotation = rotation in degrees.
+// returns {x, y} giving the new point.
+const rotatePoint = (pt: Position, o: Position, rotation: number) => {
+  var angle = rotation * (Math.PI / 180); // Convert to radians
 
   var rotatedX =
     Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
@@ -109,23 +96,19 @@ export function rotatePoint(pt: Position, o: Position, a: number) {
     Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;
 
   return { x: rotatedX, y: rotatedY };
-}
+};
 
 export const getBoundingBox = (
   x: number,
   y: number,
-  nextWidth: number,
-  nextHeight: number,
+  width: number,
+  height: number,
   rotation: number
 ) => {
   const tl = rotatePoint({ x, y }, { x, y }, rotation);
-  const tr = rotatePoint({ x: x + nextWidth, y }, { x, y }, rotation);
-  const br = rotatePoint(
-    { x: x + nextWidth, y: y + nextHeight },
-    { x, y },
-    rotation
-  );
-  const bl = rotatePoint({ x: x, y: y + nextHeight }, { x, y }, rotation);
+  const tr = rotatePoint({ x: x + width, y }, { x, y }, rotation);
+  const br = rotatePoint({ x: x + width, y: y + height }, { x, y }, rotation);
+  const bl = rotatePoint({ x: x, y: y + height }, { x, y }, rotation);
   const deltaX = [tl.x, tr.x, br.x, bl.x];
   const deltaY = [tl.y, tr.y, br.y, bl.y];
 

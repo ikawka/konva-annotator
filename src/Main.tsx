@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Layer, Stage, Image, Group } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
-// import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 import "./App.css";
 import Rectangle from "./Rectangle";
 import bg from "./imgs/apartment-buildings.webp";
 import Toolbar from "./Toolbar";
-import { getDistance, isDrawable } from "./utils";
+import { getLineDistance, isDrawable } from "./utils";
 import Pin from "./Pin";
 import { useImage } from "react-konva-utils";
 import Konva from "konva";
@@ -16,6 +15,7 @@ import Arrow from "./Arrow";
 import { ShapeProp, Tool } from "./types";
 import Polygon from "./Polygon";
 import Freehand from "./Freehand";
+import { PIN_WIDTH, PIN_HEIGHT, MIN_LINE_LENGTH } from "./constants";
 
 const Shadow = styled.div`
   position: absolute;
@@ -35,13 +35,28 @@ interface StageDimension {
 
 const initialAnnotation: ShapeProp[] = [
   {
-    height: 95.00000000000009,
+    height: 95.00000000000055,
     key: "1",
-    rotation: 17.969139740156397,
+    rotation: 14.953341953989321,
     tool: "rect",
-    width: 152.99999999999966,
-    x: 211.38542750719773,
-    y: 137.71630670006996,
+    width: 112.78726653567817,
+    x: 247.19599553369903,
+    y: 109.96361074523652,
+  },
+  {
+    x: 262.5,
+    y: 95,
+    width: 6,
+    height: 2,
+    key: "2",
+    tool: "freehand",
+    rotation: 0,
+    color: "#ff0000",
+    strokeWidth: 3,
+    points: [
+      262.5, 95, 263.5, 95, 264.5, 95, 264.5, 96, 265.5, 96, 266.5, 96, 267.5,
+      96, 267.5, 97, 268.5, 97,
+    ],
   },
 ];
 
@@ -56,7 +71,7 @@ const Main = () => {
   });
   const [annotations, setAnnotations] =
     useState<ShapeProp[]>(initialAnnotation);
-  const [newAnnotation, setNewAnnotation] = useState<ShapeProp[]>([]);
+  const [nextAnnotation, setNextAnnotation] = useState<ShapeProp[]>([]);
   const [selectedId, selectShape] = useState<number>(-1);
   const [currentTool, setCurrentTool] = useState<Tool>("pointer");
 
@@ -69,9 +84,13 @@ const Main = () => {
 
   let pinCnt = 0;
 
-  const onToolbarSelect = (tool: Tool) => {
+  const onToolbarSelect = useCallback((tool: Tool) => {
     setCurrentTool(tool);
-  };
+    setNextAnnotation([]);
+    setIsDrawPoly(false);
+    setPolyIsOverStart(false);
+    updatePolyPoints(1);
+  }, []);
 
   const handleMouseDown = (event: KonvaEventObject<MouseEvent>) => {
     if (event.target !== event.target.getStage() && !isDrawable(currentTool))
@@ -80,14 +99,12 @@ const Main = () => {
     selectShape(-1);
     const stage = event.target?.getStage();
     if (
-      newAnnotation.length === 0 &&
+      nextAnnotation.length === 0 &&
       stage &&
       isDrawable(currentTool) &&
       groupRef.current &&
       !isDrawPoly
     ) {
-      const pinWidth = 25;
-      const pinHeight = 35;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       let startX = x / stage.scaleX() - groupRef.current.x();
       let startY = y / stage.scaleY() - groupRef.current.y();
@@ -104,8 +121,8 @@ const Main = () => {
       };
       switch (currentTool) {
         case "pin":
-          data.x = startX - pinWidth / 2;
-          data.y = startY - pinHeight;
+          data.x = startX - PIN_WIDTH / 2;
+          data.y = startY - PIN_HEIGHT;
           data.strokeWidth = 0;
           break;
         case "arrow":
@@ -119,7 +136,7 @@ const Main = () => {
           data.points = [startX, startY];
       }
 
-      setNewAnnotation([data]);
+      setNextAnnotation([data]);
     } else if (isDrawPoly && stage && groupRef.current) {
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       let nextX = x / stage.scaleX() - groupRef.current.x();
@@ -128,34 +145,34 @@ const Main = () => {
       if (polyIsOverStart) {
         if (polyPoints <= 2) return;
         const points = [
-          ...(newAnnotation[0].points?.slice(
+          ...(nextAnnotation[0].points?.slice(
             0,
-            newAnnotation[0].points.length - 2
+            nextAnnotation[0].points.length - 2
           ) || []),
         ];
         const annotationToAdd: ShapeProp = {
-          ...newAnnotation[0],
+          ...nextAnnotation[0],
           points: [...points, points[0], points[1]],
           key: `${annotations.length + 1}`,
           tool: currentTool,
           isClosed: true,
         };
         annotations.push(annotationToAdd);
-        setNewAnnotation([]);
+        setNextAnnotation([]);
         setAnnotations(annotations);
         updatePolyPoints(1);
         setIsDrawPoly(false);
         setPolyIsOverStart(false);
       } else {
         const points = [
-          ...(newAnnotation[0].points?.slice(
+          ...(nextAnnotation[0].points?.slice(
             0,
-            newAnnotation[0].points.length - 2
+            nextAnnotation[0].points.length - 2
           ) || []),
           nextX,
           nextY,
         ];
-        setNewAnnotation((prev) => {
+        setNextAnnotation((prev) => {
           return [{ ...prev[0], points }];
         });
         updatePolyPoints((prev) => prev + 1);
@@ -167,13 +184,13 @@ const Main = () => {
     if (currentTool === "poly") return;
     const stage = event.target?.getStage();
     if (
-      newAnnotation.length === 1 &&
+      nextAnnotation.length === 1 &&
       stage &&
       isDrawable(currentTool) &&
       groupRef.current
     ) {
-      const sx = newAnnotation[0].x;
-      const sy = newAnnotation[0].y;
+      const sx = nextAnnotation[0].x;
+      const sy = nextAnnotation[0].y;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
       const endX = x / stage.scaleX() - groupRef.current.x();
       const endY = y / stage.scaleY() - groupRef.current.y();
@@ -199,16 +216,22 @@ const Main = () => {
           break;
         case "arrow":
           data = { ...data, points: [sx, sy, endX, endY], x: sx, y: sy };
-          if (getDistance(sx, sy, endY, endY) < 5) {
-            return;
-          }
+          console.log(getLineDistance(sx, sy, endX, endY));
           break;
         case "freehand":
-          data = { ...data, points: newAnnotation[0].points };
+          data = { ...data, points: nextAnnotation[0].points };
+      }
+
+      if (
+        currentTool === "arrow" &&
+        getLineDistance(sx, sy, endX, endY) < MIN_LINE_LENGTH
+      ) {
+        setNextAnnotation([]);
+        return;
       }
 
       annotations.push(data);
-      setNewAnnotation([]);
+      setNextAnnotation([]);
       setAnnotations(annotations);
     }
   };
@@ -216,13 +239,13 @@ const Main = () => {
   const handleMouseMove = (event: KonvaEventObject<MouseEvent>) => {
     const stage = event.target?.getStage();
     if (
-      newAnnotation.length === 1 &&
+      nextAnnotation.length === 1 &&
       stage &&
       isDrawable(currentTool) &&
       groupRef.current
     ) {
-      const startX = newAnnotation[0].x;
-      const startY = newAnnotation[0].y;
+      const startX = nextAnnotation[0].x;
+      const startY = nextAnnotation[0].y;
       const pinWidth = 25;
       const pinHeight = 35;
       const { x, y } = stage.getPointerPosition() ?? { x: 0, y: 0 };
@@ -250,21 +273,23 @@ const Main = () => {
           data.points = [startX, startY, endX, endY];
           break;
         case "poly":
-          let length = newAnnotation[0].points?.length || 0;
+          let length = nextAnnotation[0].points?.length || 0;
           if (length / 2 > polyPoints) {
             length -= 2;
           }
           data.points = [
-            ...(newAnnotation[0].points?.slice(0, length) || []),
+            ...(nextAnnotation[0].points?.slice(0, length) || []),
             endX,
             endY,
           ];
           break;
         case "freehand":
-          data.points = [...(newAnnotation[0].points || []), endX, endY];
+          data.points = [...(nextAnnotation[0].points || []), endX, endY];
+          data.width = undefined;
+          data.height = undefined;
       }
 
-      setNewAnnotation([data]);
+      setNextAnnotation([data]);
     }
   };
 
@@ -284,7 +309,7 @@ const Main = () => {
   }, [currentTool]);
 
   // this is necessary for real-time drawing
-  const annotationsToDraw = [...annotations, ...newAnnotation];
+  const annotationsToDraw = [...annotations, ...nextAnnotation];
   console.log(annotations);
   return (
     <>
@@ -357,9 +382,9 @@ const Main = () => {
                         key={index}
                         shapeProp={shape}
                         isSelected={index === selectedId}
-                        onChange={(newAttrs) => {
+                        onChange={(nextAttrs) => {
                           const r = annotationsToDraw.slice();
-                          r[index] = newAttrs;
+                          r[index] = nextAttrs;
                           setAnnotations(r);
                         }}
                         onSelect={() => {
@@ -376,9 +401,9 @@ const Main = () => {
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
                         }}
-                        onChange={(newAttrs) => {
+                        onChange={(nextAttrs) => {
                           const r = annotationsToDraw.slice();
-                          r[index] = newAttrs;
+                          r[index] = nextAttrs;
                           setAnnotations(r);
                         }}
                       />
@@ -393,9 +418,9 @@ const Main = () => {
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
                         }}
-                        onChange={(newAttrs) => {
+                        onChange={(nextAttrs) => {
                           const r = annotationsToDraw.slice();
-                          r[index] = newAttrs;
+                          r[index] = nextAttrs;
                           setAnnotations(r);
                         }}
                       />
@@ -413,9 +438,9 @@ const Main = () => {
                           width: shape.width ?? 0,
                           height: shape.height ?? 0,
                         }}
-                        onChange={(newAttrs) => {
+                        onChange={(nextAttrs) => {
                           const r = annotationsToDraw.slice();
-                          r[index] = newAttrs;
+                          r[index] = nextAttrs;
                           setAnnotations(r);
                         }}
                       />
@@ -430,9 +455,9 @@ const Main = () => {
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
                         }}
-                        onChange={(newAttrs) => {
+                        onChange={(nextAttrs) => {
                           const r = annotationsToDraw.slice();
-                          r[index] = newAttrs;
+                          r[index] = nextAttrs;
                           setAnnotations(r);
                         }}
                       />

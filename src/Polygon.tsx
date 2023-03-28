@@ -6,6 +6,7 @@ import { Anchor } from "./Anchor";
 import { Nodes, ShapeProp } from "./types";
 import { pointsToNodes } from "./utils";
 import Konva from "konva";
+import { DEFAULT_COLOR, POLY_COLOR } from "./constants";
 
 interface Props {
   shapeProp: ShapeProp;
@@ -41,12 +42,24 @@ const Polygon = ({
       <Line
         ref={shapeRef}
         points={shapeProp.points}
-        stroke={shapeProp.color || "red"}
+        stroke={shapeProp.color || DEFAULT_COLOR}
         strokeWidth={shapeProp.strokeWidth}
-        fill="rgba(255,255,255,0.5)"
+        fill={
+          !shapeProp.isClosed ? POLY_COLOR.MOUSE_OVER : POLY_COLOR.MOUSE_OUT
+        }
         closed={true}
         draggable={isSelected}
         onClick={onSelect}
+        onMouseMove={(e) => {
+          if (shapeProp.isClosed) {
+            e.target.setAttrs({ fill: POLY_COLOR.MOUSE_OVER });
+          }
+        }}
+        onMouseOut={(e) => {
+          if (shapeProp.isClosed) {
+            e.target.setAttrs({ fill: POLY_COLOR.MOUSE_OUT });
+          }
+        }}
         onDragStart={() => {
           setIsDragging(true);
         }}

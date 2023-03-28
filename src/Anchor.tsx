@@ -2,6 +2,12 @@ import React from "react";
 import Konva from "konva";
 import { Circle } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import {
+  ANCHOR_FILL,
+  ANCHOR_RADIUS,
+  ANCHOR_STROKE,
+  ANCHOR_STROKE_WIDTH,
+} from "./constants";
 
 export interface AnchorProps {
   x: number;
@@ -21,10 +27,10 @@ export const Anchor = React.forwardRef<Konva.Circle, AnchorProps>(
         ref={ref}
         x={x}
         y={y}
-        radius={6}
-        stroke="#83c5ff"
-        fill="#fff"
-        strokeWidth={1}
+        radius={ANCHOR_RADIUS}
+        stroke={ANCHOR_STROKE}
+        fill={ANCHOR_FILL}
+        strokeWidth={ANCHOR_STROKE_WIDTH}
         draggable={draggable}
         visible={visible}
         {...rest}
