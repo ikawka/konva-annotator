@@ -2,13 +2,15 @@ import React, { useEffect, useRef } from "react";
 import { Transformer as KonvaTransform } from "react-konva";
 import Konva from "konva";
 import { RECT_MIN_HEIGHT, RECT_MIN_WIDTH } from "./constants";
+import { KonvaEventObject } from "konva/lib/Node";
 
 interface Props {
   nodes?: any;
   enabledAnchors?: string[];
+  onTransformEnd?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Transformer = ({ nodes, enabledAnchors }: Props) => {
+const Transformer = ({ nodes, enabledAnchors, onTransformEnd }: Props) => {
   const trRef = useRef<Konva.Transformer>(null);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ const Transformer = ({ nodes, enabledAnchors }: Props) => {
         }
         return newBox;
       }}
+      onTransformEnd={onTransformEnd}
     />
   );
 };

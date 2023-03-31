@@ -26,7 +26,7 @@ export interface ShapeProp {
   key: string;
   rotation: number;
   strokeWidth?: number;
-  isClosed?: boolean;
+  isDone?: boolean;
   scaleX?: number;
   scaleY?: number;
 }

@@ -86,7 +86,7 @@ export const getLineDistance = (
 // o = {x, y} of rotation origin,
 // rotation = rotation in degrees.
 // returns {x, y} giving the new point.
-const rotatePoint = (pt: Position, o: Position, rotation: number) => {
+export const rotatePoint = (pt: Position, o: Position, rotation: number) => {
   var angle = rotation * (Math.PI / 180); // Convert to radians
 
   var rotatedX =

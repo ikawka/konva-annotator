@@ -44,19 +44,17 @@ const Polygon = ({
         points={shapeProp.points}
         stroke={shapeProp.color || DEFAULT_COLOR}
         strokeWidth={shapeProp.strokeWidth}
-        fill={
-          !shapeProp.isClosed ? POLY_COLOR.MOUSE_OVER : POLY_COLOR.MOUSE_OUT
-        }
+        fill={!shapeProp.isDone ? POLY_COLOR.MOUSE_OVER : POLY_COLOR.MOUSE_OUT}
         closed={true}
         draggable={isSelected}
         onClick={onSelect}
         onMouseMove={(e) => {
-          if (shapeProp.isClosed) {
+          if (shapeProp.isDone) {
             e.target.setAttrs({ fill: POLY_COLOR.MOUSE_OVER });
           }
         }}
         onMouseOut={(e) => {
-          if (shapeProp.isClosed) {
+          if (shapeProp.isDone) {
             e.target.setAttrs({ fill: POLY_COLOR.MOUSE_OUT });
           }
         }}
@@ -77,7 +75,7 @@ const Polygon = ({
           e.target.setAttrs({ x: 0, y: 0 });
         }}
       />
-      {(isSelected || !shapeProp.isClosed) &&
+      {(isSelected || !shapeProp.isDone) &&
         !isDragging &&
         nodes.map(([x = 0, y = 0], index) => {
           return (
@@ -86,9 +84,9 @@ const Polygon = ({
               visible
               x={x}
               y={y}
-              draggable={shapeProp.isClosed}
+              draggable={shapeProp.isDone}
               onMouseOver={(e: KonvaEventObject<MouseEvent>) => {
-                if (!shapeProp.isClosed && index === 0) {
+                if (!shapeProp.isDone && index === 0) {
                   cbIsOverStart(true);
                 }
                 e.target.setAttrs({
@@ -97,7 +95,7 @@ const Polygon = ({
                 });
               }}
               onMouseOut={(e: KonvaEventObject<MouseEvent>) => {
-                if (!shapeProp.isClosed && index === 0) {
+                if (!shapeProp.isDone && index === 0) {
                   cbIsOverStart(false);
                 }
                 e.target.setAttrs({
@@ -106,7 +104,7 @@ const Polygon = ({
                 });
               }}
               onDragMove={(e: KonvaEventObject<MouseEvent>) => {
-                if (!shapeProp.isClosed) return;
+                if (!shapeProp.isDone) return;
                 const { x, y } = e.target.getPosition();
                 const nextPoints = pointsToNodes(shapeProp.points || []);
                 nextPoints[index] = [x, y];

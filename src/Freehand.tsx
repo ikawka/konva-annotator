@@ -2,8 +2,10 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
 import { Line } from "react-konva";
+import { Anchor } from "./Anchor";
 import Transformer from "./Transformer";
 import { ShapeProp } from "./types";
+import { rotatePoint } from "./utils";
 
 interface Props {
   shapeProps: ShapeProp;
@@ -16,6 +18,11 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = React.useRef<Konva.Line>(null);
   const trRef = React.useRef<Konva.Transformer>(null);
 
+  const [anchorPos, setAnchorPos] = React.useState<number[]>([
+    (shapeProps.points?.[0] || 0) + shapeProps.x,
+    (shapeProps.points?.[1] || 0) + shapeProps.y,
+  ]);
+
   React.useEffect(() => {
     if (isSelected && shapeRef.current) {
       // we need to attach transformer manually
@@ -24,6 +31,12 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
     }
   }, [isSelected, shapeRef]);
 
+  React.useEffect(() => {
+    setAnchorPos([
+      (shapeProps.points?.[0] || 0) + shapeProps.x,
+      (shapeProps.points?.[1] || 0) + shapeProps.y,
+    ]);
+  }, [shapeProps]);
   return (
     <>
       <Line
@@ -35,8 +48,11 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         draggable={isSelected}
         scaleX={shapeProps.scaleX}
         scaleY={shapeProps.scaleY}
+        rotation={shapeProps.rotation}
+        x={shapeProps.x}
+        y={shapeProps.y}
         onDragEnd={(e) => {
-          const { x, y } = e.target.getPosition();
+          const { x, y } = e.target.getAttrs();
           onChange({
             ...shapeProps,
             x,
@@ -44,21 +60,28 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           });
         }}
         onTransformEnd={(e) => {
-          const { x, y, scaleX, scaleY, width, height, rotation } =
-            e.target.getAttrs();
-          console.log({ x, y, width, height, scaleX, scaleY, rotation });
+          console.log("ola");
+          const { x, y, rotation } = e.target.getAttrs();
+
           onChange({
             ...shapeProps,
             x,
             y,
-            scaleX,
-            scaleY,
             rotation,
           });
+          const rotated = rotatePoint(
+            { x: anchorPos[0], y: anchorPos[1] },
+            { x, y },
+            rotation
+          );
+          setAnchorPos([rotated.x, rotated.y]);
         }}
       />
       {isSelected && shapeRef.current && (
-        <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
+        <>
+          <Anchor visible x={anchorPos[0]} y={anchorPos[1]} />
+          <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
+        </>
       )}
     </>
   );
