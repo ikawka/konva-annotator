@@ -1,11 +1,14 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import { flattenDeep } from "lodash";
 import React from "react";
-import { Line } from "react-konva";
+import { Line, Rect } from "react-konva";
 import { Anchor } from "./Anchor";
+import { LABEL_OFFSET } from "./constants";
+import ToolTip from "./ToolTip";
 import Transformer from "./Transformer";
-import { ShapeProp } from "./types";
-import { rotatePoint } from "./utils";
+import { Position, ShapeProp } from "./types";
+import { generateBounding, pointsToNodes, rotatePoint } from "./utils";
 
 interface Props {
   shapeProps: ShapeProp;
@@ -17,11 +20,7 @@ interface Props {
 const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = React.useRef<Konva.Line>(null);
   const trRef = React.useRef<Konva.Transformer>(null);
-
-  const [anchorPos, setAnchorPos] = React.useState<number[]>([
-    (shapeProps.points?.[0] || 0) + shapeProps.x,
-    (shapeProps.points?.[1] || 0) + shapeProps.y,
-  ]);
+  const [labelPos, updateLabelPos] = React.useState<Position>({ x: 0, y: 0 });
 
   React.useEffect(() => {
     if (isSelected && shapeRef.current) {
@@ -32,11 +31,13 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   }, [isSelected, shapeRef]);
 
   React.useEffect(() => {
-    setAnchorPos([
-      (shapeProps.points?.[0] || 0) + shapeProps.x,
-      (shapeProps.points?.[1] || 0) + shapeProps.y,
-    ]);
+    const { x, y, height } = generateBounding(shapeProps.points || []);
+    updateLabelPos({
+      x,
+      y: y + height + LABEL_OFFSET,
+    });
   }, [shapeProps]);
+
   return (
     <>
       <Line
@@ -53,34 +54,47 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         y={shapeProps.y}
         onDragEnd={(e) => {
           const { x, y } = e.target.getAttrs();
-          onChange({
-            ...shapeProps,
-            x,
-            y,
-          });
-        }}
-        onTransformEnd={(e) => {
-          console.log("ola");
-          const { x, y, rotation } = e.target.getAttrs();
+          const newPoints = pointsToNodes(shapeProps.points || []).map(
+            (point) => {
+              return [point[0] + x, point[1] + y];
+            }
+          );
 
           onChange({
             ...shapeProps,
-            x,
-            y,
-            rotation,
+            points: flattenDeep(newPoints),
+            x: 0,
+            y: 0,
           });
-          const rotated = rotatePoint(
-            { x: anchorPos[0], y: anchorPos[1] },
-            { x, y },
-            rotation
-          );
-          setAnchorPos([rotated.x, rotated.y]);
+          e.target.setPosition({ x: 0, y: 0 });
         }}
+        onTransformEnd={(e) => {
+          const { x, y, rotation } = e.target.getAttrs();
+          const newPoints = pointsToNodes(shapeProps.points || []).map(
+            (point) => {
+              const r = rotatePoint(
+                { x: point[0] + x, y: point[1] + y },
+                { x, y },
+                rotation
+              );
+              return [r.x, r.y];
+            }
+          );
+
+          onChange({
+            ...shapeProps,
+            points: flattenDeep(newPoints),
+            x: 0,
+            y: 0,
+          });
+          e.target.setAttrs({ x: 0, y: 0, rotation: 0 });
+        }}
+        zIndex={5}
       />
       {isSelected && shapeRef.current && (
         <>
-          <Anchor visible x={anchorPos[0]} y={anchorPos[1]} />
           <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
+          {labelPos.x !== 0 && <ToolTip position={labelPos} />}
         </>
       )}
     </>

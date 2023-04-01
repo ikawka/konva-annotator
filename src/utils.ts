@@ -98,7 +98,23 @@ export const rotatePoint = (pt: Position, o: Position, rotation: number) => {
   return { x: rotatedX, y: rotatedY };
 };
 
-export const getBoundingBox = (
+export const generateBounding = (p: number[]) => {
+  const points = pointsToNodes(p);
+  // get all x and y in points and separate
+  let deltaX: number[] = [];
+  let deltaY: number[] = [];
+  points.map((point) => {
+    deltaX.push(point[0]);
+    deltaY.push(point[1]);
+  });
+  const minX = Math.min(...deltaX);
+  const minY = Math.min(...deltaY);
+  const maxX = Math.max(...deltaX);
+  const maxY = Math.max(...deltaY);
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+};
+
+export const getRectBoundingBox = (
   x: number,
   y: number,
   width: number,

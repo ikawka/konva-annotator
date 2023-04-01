@@ -13,7 +13,7 @@ import {
 import ToolTip from "./ToolTip";
 import Transformer from "./Transformer";
 import { Position, ShapeProp } from "./types";
-import { getBoundingBox } from "./utils";
+import { getRectBoundingBox } from "./utils";
 
 interface Props {
   shapeProps: ShapeProp;
@@ -30,7 +30,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
 
   const handleLabelPosition = (data: any) => {
     const { x, y, height, width, rotation } = data;
-    const rotated = getBoundingBox(x, y, width, height, rotation);
+    const rotated = getRectBoundingBox(x, y, width, height, rotation);
 
     updateLabelPos({
       x: rotated.x,
