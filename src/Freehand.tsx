@@ -1,9 +1,10 @@
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import { Shape, ShapeConfig } from "konva/lib/Shape";
+import { Stage } from "konva/lib/Stage";
 import { flattenDeep } from "lodash";
 import React from "react";
-import { Line, Rect } from "react-konva";
-import { Anchor } from "./Anchor";
+import { Line } from "react-konva";
 import { LABEL_OFFSET } from "./constants";
 import ToolTip from "./ToolTip";
 import Transformer from "./Transformer";
@@ -21,6 +22,13 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = React.useRef<Konva.Line>(null);
   const trRef = React.useRef<Konva.Transformer>(null);
   const [labelPos, updateLabelPos] = React.useState<Position>({ x: 0, y: 0 });
+
+  const resetShape = (
+    shape: Shape<ShapeConfig> | Stage,
+    data?: ShapeConfig
+  ) => {
+    shape.setAttrs({ x: 0, y: 0, rotation: 0, ...data });
+  };
 
   React.useEffect(() => {
     if (isSelected && shapeRef.current) {
@@ -50,46 +58,39 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         scaleX={shapeProps.scaleX}
         scaleY={shapeProps.scaleY}
         rotation={shapeProps.rotation}
-        x={shapeProps.x}
-        y={shapeProps.y}
         onDragEnd={(e) => {
-          const { x, y } = e.target.getAttrs();
+          const { x: nextX, y: nextY } = e.target.getAttrs();
           const newPoints = pointsToNodes(shapeProps.points || []).map(
             (point) => {
-              return [point[0] + x, point[1] + y];
+              return [point[0] + nextX, point[1] + nextY];
             }
           );
 
           onChange({
             ...shapeProps,
             points: flattenDeep(newPoints),
-            x: 0,
-            y: 0,
           });
-          e.target.setPosition({ x: 0, y: 0 });
+          resetShape(e.target);
         }}
         onTransformEnd={(e) => {
-          const { x, y, rotation } = e.target.getAttrs();
+          const { x: nextX, y: nextY, rotation } = e.target.getAttrs();
           const newPoints = pointsToNodes(shapeProps.points || []).map(
             (point) => {
-              const r = rotatePoint(
-                { x: point[0] + x, y: point[1] + y },
-                { x, y },
+              const rotated = rotatePoint(
+                { x: point[0] + nextX, y: point[1] + nextY },
+                { x: nextX, y: nextY },
                 rotation
               );
-              return [r.x, r.y];
+              return [rotated.x, rotated.y];
             }
           );
 
           onChange({
             ...shapeProps,
             points: flattenDeep(newPoints),
-            x: 0,
-            y: 0,
           });
-          e.target.setAttrs({ x: 0, y: 0, rotation: 0 });
+          resetShape(e.target);
         }}
-        zIndex={5}
       />
       {isSelected && shapeRef.current && (
         <>

@@ -1,3 +1,5 @@
+import { Shape, ShapeConfig } from "konva/lib/Shape";
+import { Stage } from "konva/lib/Stage";
 import { chunk } from "lodash";
 import {
   Drawable,
@@ -98,20 +100,28 @@ export const rotatePoint = (pt: Position, o: Position, rotation: number) => {
   return { x: rotatedX, y: rotatedY };
 };
 
+const deltaToBoxCoors = (deltaX: number[], deltaY: number[]) => {
+  const x = Math.min(...deltaX);
+  const y = Math.min(...deltaY);
+  const width = Math.max(...deltaX) - x;
+  const height = Math.max(...deltaY) - y;
+  return { x, y: y, width, height };
+};
+
 export const generateBounding = (p: number[]) => {
   const points = pointsToNodes(p);
   // get all x and y in points and separate
   let deltaX: number[] = [];
   let deltaY: number[] = [];
+
+  // TODO: improve this
   points.map((point) => {
     deltaX.push(point[0]);
     deltaY.push(point[1]);
+    return null;
   });
-  const minX = Math.min(...deltaX);
-  const minY = Math.min(...deltaY);
-  const maxX = Math.max(...deltaX);
-  const maxY = Math.max(...deltaY);
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+
+  return deltaToBoxCoors(deltaX, deltaY);
 };
 
 export const getRectBoundingBox = (
@@ -128,9 +138,12 @@ export const getRectBoundingBox = (
   const deltaX = [tl.x, tr.x, br.x, bl.x];
   const deltaY = [tl.y, tr.y, br.y, bl.y];
 
-  const minX = Math.min(...deltaX);
-  const minY = Math.min(...deltaY);
-  const maxX = Math.max(...deltaX);
-  const maxY = Math.max(...deltaY);
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  return deltaToBoxCoors(deltaX, deltaY);
+};
+
+export const resetShape = (
+  shape: Shape<ShapeConfig> | Stage,
+  data?: ShapeConfig
+) => {
+  shape.setAttrs({ x: 0, y: 0, rotation: 0, ...data });
 };
