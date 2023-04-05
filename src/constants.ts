@@ -31,3 +31,5 @@ export const POLY_COLOR = {
   MOUSE_OVER: "rgba(255, 255, 255, 0.3)",
   MOUSE_OUT: "rgba(255, 255, 255, 0)",
 };
+
+export const TOOLTIP_BG_COLOR = "rgba(51, 51, 51, 0.7)";

@@ -7,7 +7,7 @@ import {
   ANCHOR_RADIUS,
   ANCHOR_STROKE,
   ANCHOR_STROKE_WIDTH,
-} from "./constants";
+} from "../constants";
 
 export interface AnchorProps {
   x: number;
@@ -15,6 +15,7 @@ export interface AnchorProps {
   visible: boolean;
   draggable?: boolean;
   onDragMove?: (e: KonvaEventObject<MouseEvent>) => void;
+  onDragStart?: (e: KonvaEventObject<MouseEvent>) => void;
   onDragEnd?: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOver?: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOut?: (e: KonvaEventObject<MouseEvent>) => void;

@@ -2,18 +2,18 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Line } from "react-konva";
 import { flattenDeep } from "lodash";
 import { KonvaEventObject } from "konva/lib/Node";
-import { Anchor } from "./Anchor";
-import { Nodes, Position, ShapeProp } from "./types";
+import { Anchor } from "../Anchor";
+import { Nodes, Position, ShapeProp } from "../../types";
 import {
   generateBounding,
   pointsToNodes,
   resetShape,
   rotatePoint,
-} from "./utils";
+} from "../../utils";
 import Konva from "konva";
-import { DEFAULT_COLOR, LABEL_OFFSET, POLY_COLOR } from "./constants";
-import Transformer from "./Transformer";
-import ToolTip from "./ToolTip";
+import { DEFAULT_COLOR, LABEL_OFFSET, POLY_COLOR } from "../../constants";
+import Transformer from "../Transformer";
+import ToolTip from "../ToolTip";
 
 interface Props {
   shapeProp: ShapeProp;
@@ -32,8 +32,12 @@ const Polygon = ({
 }: Props) => {
   const shapeRef = React.useRef<Konva.Line>(null);
   const [nodes, updateNodes] = useState<Nodes>([]);
+
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isTransforming, setIsTransforming] = React.useState<boolean>(false);
+  const [isAdjustingPoint, setIsAdjustingPoint] =
+    React.useState<boolean>(false);
+
   const [labelPos, updateLabelPos] = React.useState<Position>({ x: 0, y: 0 });
 
   const isStillPolygon = useCallback(() => {
@@ -138,10 +142,14 @@ const Polygon = ({
           resetShape(e.target);
         }}
       />
-      {(isSelected || !shapeProp.isDone) && (
-        <>
+
+      <>
+        {isSelected && shapeProp.isDone && (
           <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
-          {!isDragging && !isTransforming && (
+        )}
+        {(!shapeProp.isDone || isSelected) &&
+          !isDragging &&
+          !isTransforming && (
             <>
               {nodes.map(([x = 0, y = 0], index) => {
                 return (
@@ -186,6 +194,12 @@ const Polygon = ({
                         scaleY: 1,
                       });
                     }}
+                    onDragStart={() => {
+                      setIsAdjustingPoint(true);
+                    }}
+                    onDragEnd={() => {
+                      setIsAdjustingPoint(false);
+                    }}
                     onDragMove={(e: KonvaEventObject<MouseEvent>) => {
                       if (!shapeProp.isDone) return;
                       const { x, y } = e.target.getPosition();
@@ -203,11 +217,15 @@ const Polygon = ({
                   />
                 );
               })}
-              {labelPos.x !== 0 && <ToolTip position={labelPos} />}
+              {!isAdjustingPoint &&
+                !isTransforming &&
+                labelPos.x !== 0 &&
+                shapeProp.isDone && (
+                  <ToolTip position={labelPos} comment={shapeProp.comment} />
+                )}
             </>
           )}
-        </>
-      )}
+      </>
     </>
   );
 };

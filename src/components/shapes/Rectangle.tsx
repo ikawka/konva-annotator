@@ -8,12 +8,12 @@ import {
   RECT_MIN_HEIGHT,
   DEFAULT_COLOR,
   RECT_COLOR,
-} from "./constants";
+} from "../../constants";
 
-import ToolTip from "./ToolTip";
-import Transformer from "./Transformer";
-import { Position, ShapeProp } from "./types";
-import { getRectBoundingBox } from "./utils";
+import ToolTip from "../ToolTip";
+import Transformer from "../Transformer";
+import { Position, ShapeProp } from "../../types";
+import { getRectBoundingBox } from "../../utils";
 
 interface Props {
   shapeProps: ShapeProp;
@@ -26,6 +26,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = useRef<Konva.Rect>(null);
 
   const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const [labelPos, updateLabelPos] = useState<Position>({ x: 0, y: 0 });
 
   const handleLabelPosition = (data: any) => {
@@ -39,12 +40,11 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   };
 
   useEffect(() => {
-    if (isSelected && shapeRef.current) {
-      // set label position
-      const { x, y, height, width, rotation } = shapeRef.current.getAttrs();
-      handleLabelPosition({ x, y, height, width, rotation });
-    }
-  }, [isSelected, shapeRef]);
+    // set label position
+    const { x, y, height, width, rotation } = shapeProps;
+    handleLabelPosition({ x, y, height, width, rotation });
+    setIsDragging(false);
+  }, [shapeProps]);
 
   return (
     <React.Fragment>
@@ -63,9 +63,8 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         stroke={shapeProps.color || DEFAULT_COLOR}
         fill={RECT_COLOR.MOUSE_OUT}
         strokeWidth={shapeProps.strokeWidth}
-        onDragMove={(e) => {
-          const { x, y, height, width, rotation } = e.target.getAttrs();
-          handleLabelPosition({ x, y, height, width, rotation });
+        onDragStart={() => {
+          setIsDragging(true);
         }}
         onDragEnd={(e) => {
           const { x, y } = e.target.getPosition();
@@ -115,7 +114,13 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
       {isSelected && shapeRef.current && (
         <>
           <Transformer nodes={[shapeRef.current]} />
-          {!isResizing && labelPos.x !== 0 && <ToolTip position={labelPos} />}
+          {!isResizing && !isDragging && labelPos.x !== 0 && (
+            <ToolTip
+              position={labelPos}
+              comment={shapeProps.comment}
+              enableComments={false}
+            />
+          )}
         </>
       )}
     </React.Fragment>

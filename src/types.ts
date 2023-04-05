@@ -29,6 +29,7 @@ export interface ShapeProp {
   isDone?: boolean;
   scaleX?: number;
   scaleY?: number;
+  comment?: object[];
 }
 
 export type Points = number[];

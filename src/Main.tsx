@@ -3,18 +3,18 @@ import { Layer, Stage, Image, Group } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 import "./App.css";
-import Rectangle from "./Rectangle";
+import Rectangle from "./components/shapes/Rectangle";
 import bg from "./imgs/apartment-buildings.webp";
-import Toolbar from "./Toolbar";
+import Toolbar from "./components/Toolbar";
 import { getLineDistance, isDrawable } from "./utils";
-import Pin from "./Pin";
+import Pin from "./components/shapes/Pin";
 import { useImage } from "react-konva-utils";
 import Konva from "konva";
 import styled from "styled-components";
-import Arrow from "./Arrow";
+import Arrow from "./components/shapes/Arrow";
 import { ShapeProp, Tool } from "./types";
-import Polygon from "./Polygon";
-import Freehand from "./Freehand";
+import Polygon from "./components/shapes/Polygon";
+import Freehand from "./components/shapes/Freehand";
 import { PIN_WIDTH, PIN_HEIGHT, MIN_LINE_LENGTH } from "./constants";
 
 const Shadow = styled.div`
@@ -46,6 +46,11 @@ const initialAnnotation: ShapeProp[] = [
     strokeWidth: 3,
     points: [132, 197, 94, 284, 216, 311, 246, 213, 132, 197],
     isDone: true,
+    comment: [
+      {
+        comment: "Hello Bacon",
+      },
+    ],
   },
 ];
 

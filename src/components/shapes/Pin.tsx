@@ -1,10 +1,10 @@
 import { Circle, Group, Path, Text } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Konva from "konva";
-import ToolTip from "./ToolTip";
-import { ShapeProp } from "./types";
-import { PIN_PATH, PIN_COLOR } from "./constants";
+import ToolTip from "../ToolTip";
+import { ShapeProp } from "../../types";
+import { PIN_PATH, PIN_COLOR, LABEL_OFFSET } from "../../constants";
 
 interface Props {
   count: number;
@@ -20,20 +20,18 @@ interface LabelPos {
 }
 
 const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
-  const shapeRef = React.useRef<Konva.Group>(null);
-  const [labelPos, updateLabelPos] = React.useState<LabelPos>({ x: 0, y: 0 });
+  const shapeRef = useRef<Konva.Group>(null);
+  const [labelPos, updateLabelPos] = useState<LabelPos>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const width = 25;
   const height = 34;
 
-  React.useEffect(() => {
-    if (isSelected && shapeRef.current) {
-      updateLabelPos({
-        x: shapeRef.current.x(),
-        y: shapeRef.current.y() + shapeRef.current.height() + 10,
-      });
-    }
-  }, [isSelected, shapeRef]);
+  useEffect(() => {
+    const { x, y, height = 0 } = shapeProps;
+    updateLabelPos({ x, y: y + height + LABEL_OFFSET });
+    setIsDragging(false);
+  }, [shapeProps]);
 
   return (
     <>
@@ -45,13 +43,14 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
         y={shapeProps.y}
         draggable={isSelected}
         onClick={(e) => onSelect(e)}
-        onDragMove={() => {
-          if (shapeRef.current) {
-            updateLabelPos({
-              x: shapeRef.current.x(),
-              y: shapeRef.current.y() + shapeRef.current.height() + 10,
-            });
-          }
+        onMouseOver={(e) => {
+          shapeRef.current?.setAttr("opacity", 0.7);
+        }}
+        onMouseOut={(e) => {
+          shapeRef.current?.setAttr("opacity", 1);
+        }}
+        onDragStart={() => {
+          setIsDragging(true);
         }}
         onDragEnd={(e) => {
           onChange({
@@ -86,7 +85,9 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
           align="center"
         />
       </Group>
-      {isSelected && labelPos.x !== 0 && <ToolTip position={labelPos} />}
+      {isSelected && !isDragging && labelPos.x !== 0 && (
+        <ToolTip position={labelPos} />
+      )}
     </>
   );
 };

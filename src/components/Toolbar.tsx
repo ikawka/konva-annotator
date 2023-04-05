@@ -10,8 +10,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Tool } from "./types";
-import { isStrokable } from "./utils";
+import { Tool } from "../types";
+import { isStrokable } from "../utils";
 
 const Button = styled.button`
   all: unset;
