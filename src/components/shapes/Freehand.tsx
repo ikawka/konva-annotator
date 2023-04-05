@@ -107,7 +107,7 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         <>
           <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
           {!isDragging && !isTransforming && labelPos.x !== 0 && (
-            <ToolTip position={labelPos} />
+            <ToolTip position={labelPos} comment={shapeProps.comment} />
           )}
         </>
       )}

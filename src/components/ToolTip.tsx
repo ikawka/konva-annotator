@@ -10,11 +10,12 @@ import { Label } from "react-konva";
 import { Html } from "react-konva-utils";
 import { Position } from "../types";
 import { TOOLTIP_BG_COLOR } from "../constants";
+import { Scrollbars } from "react-custom-scrollbars-2";
 
 const ToolTipContainer = styled.div<{ withComment?: boolean }>`
   background: ${TOOLTIP_BG_COLOR};
   color: white;
-  padding: 8px 8px;
+  padding: 4px;
   font-size: 18px;
   border-radius: 4px;
   ${(props) => (props.withComment ? `min-width: 250px;` : "")}
@@ -26,6 +27,11 @@ const ToolTipContainer = styled.div<{ withComment?: boolean }>`
     width: 24px;
     height: 24px;
     text-align: center;
+    border-radius: 5px;
+    background: transparent;
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
   }
 `;
 
@@ -64,6 +70,7 @@ const ToolTip = ({
   enableComments = true,
   comment = [],
 }: ToolTipProps) => {
+  console.log(comment.length);
   return (
     <Label {...position}>
       <Html
@@ -75,12 +82,13 @@ const ToolTip = ({
           role="tooltip"
           withComment={enableComments && comment.length > 0}
         >
-          {!enableComments && comment.length === 0 && (
+          {comment.length === 0 && (
             <div
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
                 gap: 8,
+                fontSize: 14,
               }}
             >
               {enableComments && (
@@ -95,27 +103,29 @@ const ToolTip = ({
           )}
           {enableComments && comment.length > 0 && (
             <>
-              <div>
-                {comment.map((c: any, index) => {
-                  return (
-                    <Comment key={index}>
-                      <div
-                        style={{
-                          position: "absolute",
-                          right: 4,
-                          top: 4,
-                          color: "#333",
-                          fontSize: 16,
-                        }}
-                      >
-                        <button>
-                          <FontAwesomeIcon icon={faXmarkCircle} />
-                        </button>
-                      </div>
-                      <div>{c.comment}</div>
-                    </Comment>
-                  );
-                })}
+              <div style={{ padding: 4 }}>
+                <Scrollbars autoHide style={{ minHeight: 90, maxHeight: 180 }}>
+                  {comment.map((c: any, index) => {
+                    return (
+                      <Comment key={index}>
+                        <div
+                          style={{
+                            position: "absolute",
+                            right: 4,
+                            top: 4,
+                            color: "#333",
+                            fontSize: 16,
+                          }}
+                        >
+                          <button>
+                            <FontAwesomeIcon icon={faXmarkCircle} />
+                          </button>
+                        </div>
+                        <div>{c.comment}</div>
+                      </Comment>
+                    );
+                  })}
+                </Scrollbars>
               </div>
               <div
                 style={{
@@ -123,6 +133,7 @@ const ToolTip = ({
                   justifyContent: "flex-end",
                   gap: 8,
                   marginTop: 8,
+                  fontSize: 14,
                 }}
               >
                 <button>

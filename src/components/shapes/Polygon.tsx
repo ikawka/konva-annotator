@@ -80,6 +80,7 @@ const Polygon = ({
             for (let i = 0; i < nodes.length - 1; i++) {
               const [startX, startY] = nodes[i];
               const [endX, endY] = nodes[i + 1];
+              console.log({ startX, startY, endX, endY });
               if (
                 ((startX <= x && x <= endX) || (endX <= x && x <= startX)) &&
                 ((startY <= y && y <= endY) || (endY <= y && y <= startY))
@@ -165,13 +166,17 @@ const Polygon = ({
                           shapeProp.points || []
                         );
                         if (isStillPolygon()) {
+                          let points = nextPoints.filter((_, i) => {
+                            return i !== index;
+                          });
+
+                          // we need to point the last to the first;
+                          if (index === 0) {
+                            points[points.length - 1] = points[0];
+                          }
                           onChange({
                             ...shapeProp,
-                            points: flattenDeep(
-                              nextPoints.filter((_, i) => {
-                                return i !== index;
-                              })
-                            ),
+                            points: flattenDeep(points),
                           });
                         }
                       }
