@@ -2,6 +2,7 @@ import {
   faComment,
   faCommentMedical,
   faTrash,
+  faXmarkCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styled from "styled-components";
@@ -17,6 +18,7 @@ const ToolTipContainer = styled.div<{ withComment?: boolean }>`
   font-size: 18px;
   border-radius: 4px;
   ${(props) => (props.withComment ? `min-width: 250px;` : "")}
+  max-width: 250px;
   position: relative;
   & button {
     all: unset;
@@ -42,10 +44,13 @@ const Arrow = styled.div`
 `;
 
 const Comment = styled.div`
+  position: relative;
   background: #fcfcfc;
   color: #000000;
   padding: 4px;
   border-radius: 5px;
+  font-size: 14px;
+  margin-bottom: 8px;
 `;
 
 interface ToolTipProps {
@@ -70,7 +75,7 @@ const ToolTip = ({
           role="tooltip"
           withComment={enableComments && comment.length > 0}
         >
-          {enableComments && comment.length === 0 && (
+          {!enableComments && comment.length === 0 && (
             <div
               style={{
                 display: "flex",
@@ -90,9 +95,28 @@ const ToolTip = ({
           )}
           {enableComments && comment.length > 0 && (
             <>
-              {comment.map((c: any) => {
-                return <Comment>{c.comment}</Comment>;
-              })}
+              <div>
+                {comment.map((c: any, index) => {
+                  return (
+                    <Comment key={index}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          right: 4,
+                          top: 4,
+                          color: "#333",
+                          fontSize: 16,
+                        }}
+                      >
+                        <button>
+                          <FontAwesomeIcon icon={faXmarkCircle} />
+                        </button>
+                      </div>
+                      <div>{c.comment}</div>
+                    </Comment>
+                  );
+                })}
+              </div>
               <div
                 style={{
                   display: "flex",

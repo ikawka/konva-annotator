@@ -26,6 +26,7 @@ const Shadow = styled.div`
   box-shadow: 0px 0px 6px 1px rgba(0, 0, 0, 0.15) inset;
   z-index: 99999;
   pointer-events: none;
+  overflow: hidden;
 `;
 
 interface StageDimension {
@@ -48,7 +49,12 @@ const initialAnnotation: ShapeProp[] = [
     isDone: true,
     comment: [
       {
-        comment: "Hello Bacon",
+        comment:
+          "Bacon ipsum dolor amet chicken ground round jowl pancetta pork bacon biltong picanha.",
+      },
+      {
+        comment:
+          "Sausage jerky bacon pastrami. Landjaeger tri-tip venison leberkas pastrami sausage.",
       },
     ],
   },
