@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Arrow as KonvaArrow } from "react-konva";
@@ -22,9 +22,9 @@ interface Props {
 }
 
 const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
-  const shapeRef = React.useRef<Konva.Arrow>(null);
-  const [isDragging, setIsDragging] = React.useState<boolean>(false);
-  const [isTransforming, setIsTransforming] = React.useState<boolean>(false);
+  const shapeRef = useRef<Konva.Arrow>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isTransforming, setIsTransforming] = useState<boolean>(false);
   const [nodes, updateNodes] = useState<Nodes>([]);
 
   const checkLength = (index: number, point: number[]) => {
@@ -34,7 +34,7 @@ const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
     return getLineDistance(x1, y1, x2, y2) >= MIN_LINE_LENGTH;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     shapeRef.current?.setAttrs({ x: 0, y: 0 });
     updateNodes(pointsToNodes(shapeProp.points || []));
     setIsDragging(false);

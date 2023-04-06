@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Shape, ShapeConfig } from "konva/lib/Shape";
@@ -24,7 +24,7 @@ const Freehand = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
   const [labelPos, updateLabelPos] = useState<Position>({ x: 0, y: 0 });
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [isTransforming, setIsTransforming] = React.useState<boolean>(false);
+  const [isTransforming, setIsTransforming] = useState<boolean>(false);
 
   const resetShape = (
     shape: Shape<ShapeConfig> | Stage,

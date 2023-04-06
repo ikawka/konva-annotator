@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Transformer as KonvaTransform } from "react-konva";
 import Konva from "konva";
 import { RECT_MIN_HEIGHT, RECT_MIN_WIDTH } from "../constants";

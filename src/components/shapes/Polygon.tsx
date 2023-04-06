@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Line } from "react-konva";
 import { flattenDeep } from "lodash";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -30,15 +30,14 @@ const Polygon = ({
   isSelected,
   onSelect,
 }: Props) => {
-  const shapeRef = React.useRef<Konva.Line>(null);
+  const shapeRef = useRef<Konva.Line>(null);
   const [nodes, updateNodes] = useState<Nodes>([]);
 
-  const [isDragging, setIsDragging] = React.useState<boolean>(false);
-  const [isTransforming, setIsTransforming] = React.useState<boolean>(false);
-  const [isAdjustingPoint, setIsAdjustingPoint] =
-    React.useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isTransforming, setIsTransforming] = useState<boolean>(false);
+  const [isAdjustingPoint, setIsAdjustingPoint] = useState<boolean>(false);
 
-  const [labelPos, updateLabelPos] = React.useState<Position>({ x: 0, y: 0 });
+  const [labelPos, updateLabelPos] = useState<Position>({ x: 0, y: 0 });
 
   const isStillPolygon = useCallback(() => {
     const nextPoints = pointsToNodes(shapeProp.points || []);
