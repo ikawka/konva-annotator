@@ -115,11 +115,7 @@ const Rectangle = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
         <>
           <Transformer nodes={[shapeRef.current]} />
           {!isResizing && !isDragging && labelPos.x !== 0 && (
-            <ToolTip
-              position={labelPos}
-              comment={shapeProp.comment}
-              enableComments={false}
-            />
+            <ToolTip position={labelPos} comment={shapeProp.comment} />
           )}
         </>
       )}
