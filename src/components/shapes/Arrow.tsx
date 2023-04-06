@@ -15,13 +15,13 @@ import { MIN_LINE_LENGTH } from "../../constants";
 import Transformer from "../Transformer";
 
 interface Props {
-  shapeProps: ShapeProp;
+  shapeProp: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
 }
 
-const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
+const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
   const shapeRef = React.useRef<Konva.Arrow>(null);
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isTransforming, setIsTransforming] = React.useState<boolean>(false);
@@ -36,19 +36,19 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
 
   React.useEffect(() => {
     shapeRef.current?.setAttrs({ x: 0, y: 0 });
-    updateNodes(pointsToNodes(shapeProps.points || []));
+    updateNodes(pointsToNodes(shapeProp.points || []));
     setIsDragging(false);
-  }, [shapeProps]);
+  }, [shapeProp]);
 
   return (
     <>
       <KonvaArrow
         ref={shapeRef}
-        points={shapeProps.points || []}
-        stroke={shapeProps.color || "red"}
-        strokeWidth={shapeProps.strokeWidth}
-        pointerLength={(shapeProps.strokeWidth || 4) * 2}
-        pointerWidth={(shapeProps.strokeWidth || 4) * 2}
+        points={shapeProp.points || []}
+        stroke={shapeProp.color || "red"}
+        strokeWidth={shapeProp.strokeWidth}
+        pointerLength={(shapeProp.strokeWidth || 4) * 2}
+        pointerWidth={(shapeProp.strokeWidth || 4) * 2}
         onClick={onSelect}
         draggable={isSelected}
         onDragStart={() => {
@@ -56,9 +56,9 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
         }}
         onDragEnd={(e) => {
           const { x, y } = e.target.getAttrs();
-          const [x1, y1, x2, y2] = shapeProps.points ?? [];
+          const [x1, y1, x2, y2] = shapeProp.points ?? [];
           onChange({
-            ...shapeProps,
+            ...shapeProp,
             points: [x1 + x, y1 + y, x2 + x, y2 + y],
           });
           resetShape(e.target);
@@ -69,7 +69,7 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
         onTransformEnd={(e) => {
           setIsTransforming(false);
           const { x: nextX, y: nextY, rotation } = e.target.getAttrs();
-          const newPoints = pointsToNodes(shapeProps.points || []).map(
+          const newPoints = pointsToNodes(shapeProp.points || []).map(
             (point) => {
               const rotated = rotatePoint(
                 { x: point[0] + nextX, y: point[1] + nextY },
@@ -81,7 +81,7 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
           );
 
           onChange({
-            ...shapeProps,
+            ...shapeProp,
             points: flattenDeep(newPoints),
           });
           resetShape(e.target);
@@ -102,12 +102,12 @@ const Arrow = ({ shapeProps, isSelected, onChange, onSelect }: Props) => {
                   if (checkLength(index, [x, y])) {
                     nodes[index] = [x, y];
                     onChange({
-                      ...shapeProps,
+                      ...shapeProp,
                       points: flattenDeep(nodes),
                     });
                     updateNodes(nodes);
                   } else {
-                    const n = pointsToNodes(shapeProps.points || []);
+                    const n = pointsToNodes(shapeProp.points || []);
                     e.target.setAttrs({ x: n[index][0], y: n[index][1] });
                   }
                 }}

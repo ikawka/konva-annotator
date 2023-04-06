@@ -12,13 +12,13 @@ import { Position, ShapeProp } from "../../types";
 import { generateBounding, pointsToNodes, rotatePoint } from "../../utils";
 
 interface Props {
-  shapeProps: ShapeProp;
+  shapeProp: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
 }
 
-const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
+const Freehand = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = useRef<Konva.Line>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [labelPos, updateLabelPos] = useState<Position>({ x: 0, y: 0 });
@@ -42,39 +42,39 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
   }, [isSelected, shapeRef]);
 
   useEffect(() => {
-    const { x, y, height } = generateBounding(shapeProps.points || []);
+    const { x, y, height } = generateBounding(shapeProp.points || []);
     updateLabelPos({
       x,
       y: y + height + LABEL_OFFSET,
     });
     setIsDragging(false);
-  }, [shapeProps]);
+  }, [shapeProp]);
 
   return (
     <>
       <Line
         ref={shapeRef}
-        points={shapeProps.points}
-        stroke={shapeProps.color}
-        strokeWidth={shapeProps.strokeWidth}
+        points={shapeProp.points}
+        stroke={shapeProp.color}
+        strokeWidth={shapeProp.strokeWidth}
         onClick={onSelect}
         draggable={isSelected}
-        scaleX={shapeProps.scaleX}
-        scaleY={shapeProps.scaleY}
-        rotation={shapeProps.rotation}
+        scaleX={shapeProp.scaleX}
+        scaleY={shapeProp.scaleY}
+        rotation={shapeProp.rotation}
         onDragStart={() => {
           setIsDragging(true);
         }}
         onDragEnd={(e) => {
           const { x: nextX, y: nextY } = e.target.getAttrs();
-          const newPoints = pointsToNodes(shapeProps.points || []).map(
+          const newPoints = pointsToNodes(shapeProp.points || []).map(
             (point) => {
               return [point[0] + nextX, point[1] + nextY];
             }
           );
 
           onChange({
-            ...shapeProps,
+            ...shapeProp,
             points: flattenDeep(newPoints),
           });
           resetShape(e.target);
@@ -85,7 +85,7 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         onTransformEnd={(e) => {
           setIsTransforming(false);
           const { x: nextX, y: nextY, rotation } = e.target.getAttrs();
-          const newPoints = pointsToNodes(shapeProps.points || []).map(
+          const newPoints = pointsToNodes(shapeProp.points || []).map(
             (point) => {
               const rotated = rotatePoint(
                 { x: point[0] + nextX, y: point[1] + nextY },
@@ -97,7 +97,7 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           );
 
           onChange({
-            ...shapeProps,
+            ...shapeProp,
             points: flattenDeep(newPoints),
           });
           resetShape(e.target);
@@ -107,7 +107,7 @@ const Freehand = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         <>
           <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />
           {!isDragging && !isTransforming && labelPos.x !== 0 && (
-            <ToolTip position={labelPos} comment={shapeProps.comment} />
+            <ToolTip position={labelPos} comment={shapeProp.comment} />
           )}
         </>
       )}

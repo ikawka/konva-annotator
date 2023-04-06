@@ -16,13 +16,13 @@ import { Position, ShapeProp } from "../../types";
 import { getRectBoundingBox } from "../../utils";
 
 interface Props {
-  shapeProps: ShapeProp;
+  shapeProp: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
 }
 
-const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
+const Rectangle = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
   const shapeRef = useRef<Konva.Rect>(null);
 
   const [isResizing, setIsResizing] = useState<boolean>(false);
@@ -41,10 +41,10 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
 
   useEffect(() => {
     // set label position
-    const { x, y, height, width, rotation } = shapeProps;
+    const { x, y, height, width, rotation } = shapeProp;
     handleLabelPosition({ x, y, height, width, rotation });
     setIsDragging(false);
-  }, [shapeProps]);
+  }, [shapeProp]);
 
   return (
     <React.Fragment>
@@ -54,22 +54,22 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
         }}
         onTap={onSelect}
         ref={shapeRef}
-        x={shapeProps.x}
-        y={shapeProps.y}
-        height={shapeProps.height}
-        width={shapeProps.width}
-        rotation={shapeProps.rotation}
+        x={shapeProp.x}
+        y={shapeProp.y}
+        height={shapeProp.height}
+        width={shapeProp.width}
+        rotation={shapeProp.rotation}
         draggable={isSelected}
-        stroke={shapeProps.color || DEFAULT_COLOR}
+        stroke={shapeProp.color || DEFAULT_COLOR}
         fill={RECT_COLOR.MOUSE_OUT}
-        strokeWidth={shapeProps.strokeWidth}
+        strokeWidth={shapeProp.strokeWidth}
         onDragStart={() => {
           setIsDragging(true);
         }}
         onDragEnd={(e) => {
           const { x, y } = e.target.getPosition();
           onChange({
-            ...shapeProps,
+            ...shapeProp,
             x,
             y,
           });
@@ -98,7 +98,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
             // we will reset it back
             node.scale({ x: 1, y: 1 });
             const data = {
-              ...shapeProps,
+              ...shapeProp,
               x,
               y,
               width: nextWidth,
@@ -117,7 +117,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: Props) => {
           {!isResizing && !isDragging && labelPos.x !== 0 && (
             <ToolTip
               position={labelPos}
-              comment={shapeProps.comment}
+              comment={shapeProp.comment}
               enableComments={false}
             />
           )}

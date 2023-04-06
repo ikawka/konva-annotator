@@ -11,13 +11,13 @@ import { Html } from "react-konva-utils";
 import { Position } from "../types";
 import { TOOLTIP_BG_COLOR } from "../constants";
 import { Scrollbars } from "react-custom-scrollbars-2";
-
 const ToolTipContainer = styled.div<{ withComment?: boolean }>`
   background: ${TOOLTIP_BG_COLOR};
   color: white;
   padding: 4px;
   font-size: 18px;
   border-radius: 4px;
+  box-sizing: border-box;
   ${(props) => (props.withComment ? `min-width: 250px;` : "")}
   max-width: 250px;
   position: relative;
@@ -41,8 +41,8 @@ const Arrow = styled.div`
   height: 0;
   transform: rotate(45deg);
   box-sizing: border-box;
-  border-left: 4px solid ${TOOLTIP_BG_COLOR};
-  border-top: 4px solid ${TOOLTIP_BG_COLOR};
+  border-left: 5px solid ${TOOLTIP_BG_COLOR};
+  border-top: 5px solid ${TOOLTIP_BG_COLOR};
   border-right: 4px solid transparent;
   border-bottom: 4px solid transparent;
   top: -4px;
@@ -57,6 +57,9 @@ const Comment = styled.div`
   border-radius: 5px;
   font-size: 14px;
   margin-bottom: 8px;
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 interface ToolTipProps {
@@ -70,13 +73,13 @@ const ToolTip = ({
   enableComments = true,
   comment = [],
 }: ToolTipProps) => {
-  console.log(comment.length);
   return (
     <Label {...position}>
       <Html
         transformFunc={(attr) => {
-          return { ...attr, scaleX: 1, scaleY: 1 };
+          return { ...attr, scaleX: 1, scaleY: 1, rotation: 0 };
         }}
+        divProps={{ style: { zIndex: 99999 } }}
       >
         <ToolTipContainer
           role="tooltip"
@@ -117,7 +120,7 @@ const ToolTip = ({
                             fontSize: 16,
                           }}
                         >
-                          <button>
+                          <button title="Remove Comment">
                             <FontAwesomeIcon icon={faXmarkCircle} />
                           </button>
                         </div>
@@ -136,10 +139,10 @@ const ToolTip = ({
                   fontSize: 14,
                 }}
               >
-                <button>
+                <button title="Add Comment">
                   <FontAwesomeIcon icon={faCommentMedical} />
                 </button>
-                <button>
+                <button title="Remove Annotation">
                   <FontAwesomeIcon icon={faTrash} />
                 </button>
               </div>

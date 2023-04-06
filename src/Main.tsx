@@ -64,6 +64,7 @@ const Main = () => {
   const [image] = useImage(bg);
   const containerRef = useRef<HTMLDivElement>(null);
   const groupRef = useRef<Konva.Group>(null);
+  const stageRef = useRef<Konva.Stage>(null);
 
   const [dimension, updateDimension] = useState<StageDimension>({
     width: 0,
@@ -296,6 +297,27 @@ const Main = () => {
     }
   };
 
+  const handleZoom = useCallback(
+    (direction: number = 1) => {
+      if (!stageRef.current) return;
+      const scaleBy = 1.05;
+      const stage = stageRef.current;
+      // const pointer = stage?.getPointerPosition();
+      if (stage) {
+        const oldScale = stage.scaleX();
+        if (oldScale < 0.5 && direction < 0) return;
+        if (oldScale > 2 && direction > 0) return;
+
+        const newScale =
+          direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+        const scaleVal = { x: newScale, y: newScale };
+        stage.scale(scaleVal);
+      }
+    },
+    [stageRef]
+  );
+
   useEffect(() => {
     if (containerRef.current) {
       updateDimension({
@@ -320,10 +342,12 @@ const Main = () => {
         onSelect={onToolbarSelect}
         onColorSelect={setColor}
         onStroWidthkeSet={setStrokeWidth}
+        onZoom={handleZoom}
       />
       <div className="App" ref={containerRef}>
         <Shadow />
         <Stage
+          ref={stageRef}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
@@ -331,38 +355,13 @@ const Main = () => {
           onWheel={(e) => {
             // stop default scrolling
             e.evt.preventDefault();
-            const scaleBy = 1.05;
-            const stage = e.target.getStage();
-            // const pointer = stage?.getPointerPosition();
-            if (stage) {
-              if (!stage || !groupRef.current) return;
-              const oldScale = stage.scaleX();
-
-              // how to scale? Zoom in? Or zoom out?
-              let direction = e.evt.deltaY > 0 ? 1 : -1;
-
-              // when we zoom on trackpad, e.evt.ctrlKey is true
-              // in that case lets revert direction
-              if (e.evt.ctrlKey) {
-                direction = -direction;
-              }
-
-              const newScale =
-                direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-              const scaleVal = { x: newScale, y: newScale };
-              stage.scale(scaleVal);
-              // const mousePointTo = {
-              //   x: (pointer.x - stage.x()) / oldScale,
-              //   y: (pointer.y - stage.y()) / oldScale,
-              // };
-
-              // const newPos = {
-              //   x: pointer.x - mousePointTo.x * newScale,
-              //   y: pointer.y - mousePointTo.y * newScale,
-              // };
-              // stage.position(newPos);
+            let direction = e.evt.deltaY > 0 ? 1 : -1;
+            // when we zoom on trackpad, e.evt.ctrlKey is true
+            // in that case lets revert direction
+            if (e.evt.ctrlKey) {
+              direction = -direction;
             }
+            handleZoom(direction);
           }}
         >
           <Layer>
@@ -399,7 +398,7 @@ const Main = () => {
                     return (
                       <Arrow
                         key={index}
-                        shapeProps={shape}
+                        shapeProp={shape}
                         isSelected={index === selectedId}
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
@@ -416,7 +415,7 @@ const Main = () => {
                       <Pin
                         key={index}
                         count={(pinCnt += 1)}
-                        shapeProps={{ ...shape }}
+                        shapeProp={{ ...shape }}
                         isSelected={index === selectedId}
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
@@ -436,7 +435,7 @@ const Main = () => {
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
                         }}
-                        shapeProps={{
+                        shapeProp={{
                           ...shape,
                           width: shape.width ?? 0,
                           height: shape.height ?? 0,
@@ -454,7 +453,7 @@ const Main = () => {
                       <Freehand
                         key={index}
                         isSelected={index === selectedId}
-                        shapeProps={shape}
+                        shapeProp={shape}
                         onSelect={() => {
                           if (!isDrawable(currentTool)) selectShape(index);
                         }}

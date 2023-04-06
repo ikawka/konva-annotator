@@ -6,6 +6,8 @@ import {
   faArrowPointer,
   IconDefinition,
   faPenAlt,
+  faMagnifyingGlassPlus,
+  faMagnifyingGlassMinus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
@@ -64,6 +66,7 @@ interface ToolbarProps {
   onSelect: (selected: Tool) => void;
   onColorSelect?: (color: string) => void;
   onStroWidthkeSet?: (strokeWidth: number) => void;
+  onZoom?: (direction: number) => void;
 }
 
 const strokeWidthMin = 1;
@@ -73,10 +76,12 @@ const Toolbar = ({
   onSelect,
   onColorSelect,
   onStroWidthkeSet,
+  onZoom,
 }: ToolbarProps) => {
   const [selected, setSelected] = useState<Tool>();
   const [color, setColor] = useState<string>("#ff0000");
   const [strokeWidth, setStrokeWidth] = useState<number>(3);
+  const [zooming, setZoooming] = useState<any>(null);
 
   const tools: Tools = {
     pointer: faArrowPointer,
@@ -141,6 +146,39 @@ const Toolbar = ({
           max={strokeWidthMax}
           disabled={!isStrokable(selected)}
         />
+        <div style={{ width: 10 }} />
+        <Button
+          onMouseDown={() => {
+            if (onZoom) {
+              setZoooming(
+                setInterval(() => {
+                  onZoom(1);
+                }, 50)
+              );
+            }
+          }}
+          onMouseUp={() => {
+            clearInterval(zooming);
+          }}
+        >
+          <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
+        </Button>
+        <Button
+          onMouseDown={() => {
+            if (onZoom) {
+              setZoooming(
+                setInterval(() => {
+                  onZoom(-1);
+                }, 50)
+              );
+            }
+          }}
+          onMouseUp={() => {
+            clearInterval(zooming);
+          }}
+        >
+          <FontAwesomeIcon icon={faMagnifyingGlassMinus} />
+        </Button>
       </div>
     </div>
   );

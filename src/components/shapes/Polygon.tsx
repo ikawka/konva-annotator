@@ -46,7 +46,6 @@ const Polygon = ({
   }, [shapeProp]);
 
   useEffect(() => {
-    // shapeRef.current?.setAttrs({ x: 0, y: 0 });
     updateNodes(() => {
       // split points by pair
       const nodes = pointsToNodes(shapeProp.points || []);

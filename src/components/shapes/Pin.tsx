@@ -8,7 +8,7 @@ import { PIN_PATH, PIN_COLOR, LABEL_OFFSET } from "../../constants";
 
 interface Props {
   count: number;
-  shapeProps: ShapeProp;
+  shapeProp: ShapeProp;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
@@ -19,7 +19,7 @@ interface LabelPos {
   y: number;
 }
 
-const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
+const Pin = ({ count, shapeProp, onSelect, isSelected, onChange }: Props) => {
   const shapeRef = useRef<Konva.Group>(null);
   const [labelPos, updateLabelPos] = useState<LabelPos>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -28,10 +28,10 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
   const height = 34;
 
   useEffect(() => {
-    const { x, y, height = 0 } = shapeProps;
+    const { x, y, height = 0 } = shapeProp;
     updateLabelPos({ x, y: y + height + LABEL_OFFSET });
     setIsDragging(false);
-  }, [shapeProps]);
+  }, [shapeProp]);
 
   return (
     <>
@@ -39,8 +39,8 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
         ref={shapeRef}
         height={height}
         width={width}
-        x={shapeProps.x}
-        y={shapeProps.y}
+        x={shapeProp.x}
+        y={shapeProp.y}
         draggable={isSelected}
         onClick={(e) => onSelect(e)}
         onMouseOver={(e) => {
@@ -54,7 +54,7 @@ const Pin = ({ count, shapeProps, onSelect, isSelected, onChange }: Props) => {
         }}
         onDragEnd={(e) => {
           onChange({
-            ...shapeProps,
+            ...shapeProp,
             x: e.target.x(),
             y: e.target.y(),
           });
