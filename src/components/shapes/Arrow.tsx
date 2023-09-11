@@ -19,9 +19,16 @@ interface Props {
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
+  parentScale: number;
 }
 
-const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
+const Arrow = ({
+  shapeProp,
+  isSelected,
+  onChange,
+  onSelect,
+  parentScale,
+}: Props) => {
   const shapeRef = useRef<Konva.Arrow>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isTransforming, setIsTransforming] = useState<boolean>(false);
@@ -40,11 +47,20 @@ const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
     setIsDragging(false);
   }, [shapeProp]);
 
+  useEffect(() => {
+    if (shapeRef.current) {
+      shapeRef.current.scale({
+        x: 1 / parentScale,
+        y: 1 / parentScale,
+      });
+    }
+  }, [shapeRef, parentScale]);
+
   return (
     <>
       <KonvaArrow
         ref={shapeRef}
-        points={shapeProp.points || []}
+        points={shapeProp.points?.map((point) => point * parentScale) || []}
         stroke={shapeProp.color || "red"}
         strokeWidth={shapeProp.strokeWidth}
         pointerLength={(shapeProp.strokeWidth || 4) * 2}
@@ -96,6 +112,18 @@ const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
                 x={node[0]}
                 y={node[1]}
                 visible={!isDragging}
+                onMouseOver={(e: KonvaEventObject<MouseEvent>) => {
+                  e.target.setAttrs({
+                    scaleX: 1.4 / parentScale,
+                    scaleY: 1.4 / parentScale,
+                  });
+                }}
+                onMouseOut={(e: KonvaEventObject<MouseEvent>) => {
+                  e.target.setAttrs({
+                    scaleX: 1 / parentScale,
+                    scaleY: 1 / parentScale,
+                  });
+                }}
                 onDragMove={(e) => {
                   const { x, y } = e.target.getPosition();
                   // check if arrow is below the minimum
@@ -111,6 +139,8 @@ const Arrow = ({ shapeProp, isSelected, onChange, onSelect }: Props) => {
                     e.target.setAttrs({ x: n[index][0], y: n[index][1] });
                   }
                 }}
+                scaleX={1 / parentScale}
+                scaleY={1 / parentScale}
               />
             ))}
           <Transformer nodes={[shapeRef.current]} enabledAnchors={[]} />

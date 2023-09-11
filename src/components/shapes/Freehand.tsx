@@ -16,9 +16,16 @@ interface Props {
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
+  parentScale: number;
 }
 
-const Freehand = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
+const Freehand = ({
+  shapeProp,
+  isSelected,
+  onSelect,
+  onChange,
+  parentScale,
+}: Props) => {
   const shapeRef = useRef<Konva.Line>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [labelPos, updateLabelPos] = useState<Position>({ x: 0, y: 0 });
@@ -54,13 +61,13 @@ const Freehand = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
     <>
       <Line
         ref={shapeRef}
-        points={shapeProp.points}
+        points={shapeProp.points?.map((point) => point * parentScale)}
         stroke={shapeProp.color}
         strokeWidth={shapeProp.strokeWidth}
         onClick={onSelect}
         draggable={isSelected}
-        scaleX={shapeProp.scaleX}
-        scaleY={shapeProp.scaleY}
+        scaleX={(shapeProp.scaleX ?? 1) / parentScale}
+        scaleY={(shapeProp.scaleY ?? 1) / parentScale}
         rotation={shapeProp.rotation}
         onDragStart={() => {
           setIsDragging(true);

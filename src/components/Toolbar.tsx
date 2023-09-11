@@ -8,6 +8,7 @@ import {
   faPenAlt,
   faMagnifyingGlassPlus,
   faMagnifyingGlassMinus,
+  faICursor,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
@@ -65,7 +66,7 @@ type Tools = {
 interface ToolbarProps {
   onSelect: (selected: Tool) => void;
   onColorSelect?: (color: string) => void;
-  onStroWidthkeSet?: (strokeWidth: number) => void;
+  onStrokeWidthSet?: (strokeWidth: number) => void;
   onZoom?: (direction: number) => void;
 }
 
@@ -75,13 +76,13 @@ const strokeWidthMax = 10;
 const Toolbar = ({
   onSelect,
   onColorSelect,
-  onStroWidthkeSet,
+  onStrokeWidthSet,
   onZoom,
 }: ToolbarProps) => {
   const [selected, setSelected] = useState<Tool>();
   const [color, setColor] = useState<string>("#ff0000");
   const [strokeWidth, setStrokeWidth] = useState<number>(3);
-  const [zooming, setZoooming] = useState<any>(null);
+  const [zooming, setZooming] = useState<any>(null);
 
   const tools: Tools = {
     pointer: faArrowPointer,
@@ -90,6 +91,7 @@ const Toolbar = ({
     arrow: faArrowRight,
     poly: faDrawPolygon,
     freehand: faPenAlt,
+    text: faICursor,
   };
 
   useEffect(() => {
@@ -102,7 +104,7 @@ const Toolbar = ({
   }, [color]);
 
   useEffect(() => {
-    if (onStroWidthkeSet) onStroWidthkeSet(strokeWidth);
+    if (onStrokeWidthSet) onStrokeWidthSet(strokeWidth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [strokeWidth]);
 
@@ -150,9 +152,9 @@ const Toolbar = ({
         <Button
           onMouseDown={() => {
             if (onZoom) {
-              setZoooming(
+              setZooming(
                 setInterval(() => {
-                  onZoom(1);
+                  onZoom(0.1);
                 }, 50)
               );
             }
@@ -166,9 +168,9 @@ const Toolbar = ({
         <Button
           onMouseDown={() => {
             if (onZoom) {
-              setZoooming(
+              setZooming(
                 setInterval(() => {
-                  onZoom(-1);
+                  onZoom(-0.1);
                 }, 50)
               );
             }

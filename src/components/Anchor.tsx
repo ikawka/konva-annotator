@@ -20,6 +20,8 @@ export interface AnchorProps {
   onMouseOver?: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOut?: (e: KonvaEventObject<MouseEvent>) => void;
   onDblClick?: (e: KonvaEventObject<MouseEvent>) => void;
+  scaleX?: number;
+  scaleY?: number;
 }
 
 export const Anchor = React.forwardRef<Konva.Circle, AnchorProps>(

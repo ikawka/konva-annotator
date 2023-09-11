@@ -4,7 +4,13 @@ import React, { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 import ToolTip from "../ToolTip";
 import { ShapeProp } from "../../types";
-import { PIN_PATH, PIN_COLOR, LABEL_OFFSET } from "../../constants";
+import {
+  PIN_PATH,
+  PIN_COLOR,
+  LABEL_OFFSET,
+  PIN_HEIGHT,
+  PIN_WIDTH,
+} from "../../constants";
 
 interface Props {
   count: number;
@@ -12,6 +18,7 @@ interface Props {
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
+  parentScale: number;
 }
 
 interface LabelPos {
@@ -19,19 +26,35 @@ interface LabelPos {
   y: number;
 }
 
-const Pin = ({ count, shapeProp, onSelect, isSelected, onChange }: Props) => {
+const Pin = ({
+  count,
+  shapeProp,
+  onSelect,
+  isSelected,
+  onChange,
+  parentScale,
+}: Props) => {
   const shapeRef = useRef<Konva.Group>(null);
   const [labelPos, updateLabelPos] = useState<LabelPos>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
-  const width = 25;
-  const height = 34;
+  const width = PIN_WIDTH;
+  const height = PIN_HEIGHT;
 
   useEffect(() => {
-    const { x, y, height = 0 } = shapeProp;
-    updateLabelPos({ x, y: y + height + LABEL_OFFSET });
+    const { x, y } = shapeProp;
+    updateLabelPos({ x: x - 9 / parentScale, y: y + 9 / parentScale });
     setIsDragging(false);
-  }, [shapeProp]);
+  }, [shapeProp, parentScale]);
+
+  useEffect(() => {
+    if (shapeRef.current) {
+      shapeRef.current.setAttr("scale", {
+        x: 1 / parentScale,
+        y: 1 / parentScale,
+      });
+    }
+  }, [shapeRef, parentScale]);
 
   return (
     <>
@@ -41,6 +64,8 @@ const Pin = ({ count, shapeProp, onSelect, isSelected, onChange }: Props) => {
         width={width}
         x={shapeProp.x}
         y={shapeProp.y}
+        offsetX={width / 2}
+        offsetY={height}
         draggable={isSelected}
         onClick={(e) => onSelect(e)}
         onMouseOver={(e) => {

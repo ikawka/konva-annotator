@@ -1,6 +1,7 @@
 import { Shape, ShapeConfig } from "konva/lib/Shape";
 import { Stage } from "konva/lib/Stage";
 import { chunk } from "lodash";
+import fitImageToStage from "./fit-image-to-stage";
 import {
   Drawable,
   Nodes,
@@ -9,7 +10,10 @@ import {
   Strokable,
   strokable,
   Position,
-} from "./types";
+} from "../types";
+import scaleRatio from "./scale-ratio";
+import adjustImagePosition from "./adjust-image-position";
+import generateShapeData from "./generate-shape-data";
 
 export const getCorner = (
   pivotX: number,
@@ -147,3 +151,5 @@ export const resetShape = (
 ) => {
   shape.setAttrs({ x: 0, y: 0, rotation: 0, ...data });
 };
+
+export { fitImageToStage, scaleRatio, adjustImagePosition, generateShapeData };

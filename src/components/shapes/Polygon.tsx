@@ -21,6 +21,7 @@ interface Props {
   onChange: (props: any) => void;
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
+  parentScale: number;
 }
 
 const Polygon = ({
@@ -29,6 +30,7 @@ const Polygon = ({
   onChange,
   isSelected,
   onSelect,
+  parentScale,
 }: Props) => {
   const shapeRef = useRef<Konva.Line>(null);
   const [nodes, updateNodes] = useState<Nodes>([]);
@@ -59,11 +61,20 @@ const Polygon = ({
     });
   }, [shapeProp]);
 
+  useEffect(() => {
+    if (shapeRef.current) {
+      shapeRef.current.scale({
+        x: 1 / parentScale,
+        y: 1 / parentScale,
+      });
+    }
+  }, [shapeRef, parentScale]);
+
   return (
     <>
       <Line
         ref={shapeRef}
-        points={shapeProp.points}
+        points={shapeProp.points?.map((point) => point * parentScale)}
         stroke={shapeProp.color || DEFAULT_COLOR}
         strokeWidth={shapeProp.strokeWidth}
         fill={!shapeProp.isDone ? POLY_COLOR.MOUSE_OVER : POLY_COLOR.MOUSE_OUT}
@@ -184,8 +195,8 @@ const Polygon = ({
                         cbIsOverStart(true);
                       }
                       e.target.setAttrs({
-                        scaleX: 1.4,
-                        scaleY: 1.4,
+                        scaleX: 1.4 / parentScale,
+                        scaleY: 1.4 / parentScale,
                       });
                     }}
                     onMouseOut={(e: KonvaEventObject<MouseEvent>) => {
@@ -193,8 +204,8 @@ const Polygon = ({
                         cbIsOverStart(false);
                       }
                       e.target.setAttrs({
-                        scaleX: 1,
-                        scaleY: 1,
+                        scaleX: 1 / parentScale,
+                        scaleY: 1 / parentScale,
                       });
                     }}
                     onDragStart={() => {
@@ -217,6 +228,8 @@ const Polygon = ({
                         points: flattenDeep(nextPoints),
                       });
                     }}
+                    scaleX={1 / parentScale}
+                    scaleY={1 / parentScale}
                   />
                 );
               })}

@@ -20,9 +20,16 @@ interface Props {
   isSelected: boolean;
   onSelect: (e: KonvaEventObject<MouseEvent>) => void;
   onChange: (props: any) => void;
+  parentScale: number;
 }
 
-const Rectangle = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
+const Rectangle = ({
+  shapeProp,
+  isSelected,
+  onSelect,
+  onChange,
+  parentScale,
+}: Props) => {
   const shapeRef = useRef<Konva.Rect>(null);
 
   const [isResizing, setIsResizing] = useState<boolean>(false);
@@ -46,6 +53,15 @@ const Rectangle = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
     setIsDragging(false);
   }, [shapeProp]);
 
+  useEffect(() => {
+    if (shapeRef.current) {
+      shapeRef.current.scale({
+        x: 1 / parentScale,
+        y: 1 / parentScale,
+      });
+    }
+  }, [shapeRef, parentScale]);
+
   return (
     <React.Fragment>
       <Rect
@@ -56,8 +72,8 @@ const Rectangle = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
         ref={shapeRef}
         x={shapeProp.x}
         y={shapeProp.y}
-        height={shapeProp.height}
-        width={shapeProp.width}
+        height={(shapeProp.height ?? 0) * parentScale}
+        width={(shapeProp.width ?? 0) * parentScale}
         rotation={shapeProp.rotation}
         draggable={isSelected}
         stroke={shapeProp.color || DEFAULT_COLOR}
@@ -96,7 +112,7 @@ const Rectangle = ({ shapeProp, isSelected, onSelect, onChange }: Props) => {
             const nextWidth = Math.max(width * scaleX, RECT_MIN_WIDTH);
             const nextHeight = Math.max(height * scaleY, RECT_MIN_HEIGHT);
             // we will reset it back
-            node.scale({ x: 1, y: 1 });
+            node.scale({ x: 1 / parentScale, y: 1 / parentScale });
             const data = {
               ...shapeProp,
               x,

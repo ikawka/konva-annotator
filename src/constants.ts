@@ -33,3 +33,13 @@ export const POLY_COLOR = {
 };
 
 export const TOOLTIP_BG_COLOR = "rgba(51, 51, 51, 1)";
+
+export const STAGE_DIMENSION = {
+  WIDTH: 700,
+  HEIGHT: 500,
+};
+
+export const STAGE_PADDING = 50;
+
+export const MIN_SCALE = 0.6;
+export const MAX_SCALE = 5;
